@@ -6,17 +6,21 @@ import { useAction } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { useState } from "react";
 import { ExecutionEvent } from "../convex/ai"; // Import ExecutionEvent
+import { Button } from "ui-lab-components";
+import { FaPlay } from "react-icons/fa6";
 
 export default function Home() {
   const executeWorkflow = useAction(api.ai.executeWorkflow);
   const [isExecuting, setIsExecuting] = useState(false);
   const [executingNodeIds, setExecutingNodeIds] = useState<string[]>([]);
   const [workflowResult, setWorkflowResult] = useState<string | null>(null);
+  const [nodeResults, setNodeResults] = useState<Record<string, unknown>>({});
 
   const handleExecuteWorkflow = async () => {
     setIsExecuting(true);
     setWorkflowResult(null); // Clear previous results
     setExecutingNodeIds([]); // Clear previous executing nodes
+    setNodeResults({}); // Clear previous node results
 
     try {
       const result = await executeWorkflow({ workflowId: "default" });
@@ -26,11 +30,12 @@ export default function Home() {
         if (event.status === "started") {
           setExecutingNodeIds((prev) => [...prev, event.nodeId]);
         } else if (event.status === "completed") {
+          setNodeResults((prev) => ({ ...prev, [event.nodeId]: event.output }));
           await new Promise((resolve) => setTimeout(resolve, 500)); // Simulate delay for visual feedback
           setExecutingNodeIds((prev) => prev.filter((id) => id !== event.nodeId));
         }
       }
-      alert("Workflow executed successfully!");
+      // Removed alert as requested to improve the output flow
       setWorkflowResult(finalOutput);
     } catch (error) {
       console.error("Failed to execute workflow:", error);
@@ -42,30 +47,25 @@ export default function Home() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 p-4">
-      <div className="flex items-center gap-4 mb-8">
-        <h1 className="text-4xl font-bold text-gray-900 dark:text-gray-100">
-          Factory Workflow Builder
-        </h1>
-        <button
+    <div className="flex flex-col w-screen h-screen overflow-hidden">
+      <div className="absolute top-4 inset-x-0 mx-auto z-10 w-fit bg-background-900 border border-background-700 rounded-full">
+        <Button
           onClick={handleExecuteWorkflow}
           disabled={isExecuting}
-          className="px-6 py-2 bg-purple-600 text-white rounded-full hover:bg-purple-700 disabled:opacity-50 font-medium"
+          icon={{ left: <FaPlay /> }}
+          className="rounded-full px-4 py-2"
         >
-          {isExecuting ? "Executing..." : "Execute Workflow"}
-        </button>
+          {isExecuting ? "Running..." : "Run Workflow"}
+        </Button>
       </div>
-      <div className="relative w-full h-[600px] border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg overflow-hidden">
-        {/* Workflow Editor Canvas */}
-        <WorkflowCanvas executingNodeIds={executingNodeIds} />
-      </div>
-      {workflowResult && (
-        <div className="mt-4 p-4 w-full max-w-4xl bg-green-100 dark:bg-green-900 text-green-800 dark:text-green-200 rounded-lg shadow-md">
-          <h3 className="font-bold">Workflow Result:</h3>
-          <p className="whitespace-pre-wrap">{workflowResult}</p>
-        </div>
-      )}
-      <PromptInput />
+
+      <main className="grid-paper isolate flex-1 relative overflow-hidden">
+        <WorkflowCanvas executingNodeIds={executingNodeIds} nodeResults={nodeResults} />
+      </main>
+
+      <footer className="absolute bottom-4 p-2 right-0 left-0 mx-auto z-10 w-fit bg-background-900 border border-background-700 rounded-full">
+        <PromptInput />
+      </footer>
     </div>
   );
 }
