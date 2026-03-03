@@ -22,7 +22,6 @@ export const generateNodeHandler = async (_ctx: ActionCtx, args: { prompt: strin
   }
 
   try {
-    // Replaced deprecated generateObject with generateText + Output.object
     const { output } = await generateText({
       model: openai("gpt-4o-2024-08-06"),
       output: Output.object({ schema: UINodeSchema }),
@@ -82,7 +81,13 @@ export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: s
         - Output: "result" (type: string)
         - Parameter: "systemPrompt" (type: string, description: "Instructions for the AI")
         - Parameter: "model" (type: string, options: ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"])
-      - 'PreviewOutput': Label it "Preview Output". It should have an input named "content" (type: string).
+      - 'PreviewOutput': Label it "Preview Output". It should have an input named "content" (type: string) and a 'text' module for displaying the result.
+
+      Layout nodes logically:
+      - Assign 'position' coordinates {x, y} for each node.
+      - Start 'UserInput' at {x: 50, y: 150}.
+      - Space nodes horizontally by ~300 pixels (e.g., 350, 650, etc.).
+      - Space nodes vertically if there are branches.
 
       Connect the nodes logically using edges based on the user's request. Ensure each node has a unique UUID.`,
     });
@@ -206,10 +211,16 @@ export const executeWorkflowHandler = async (
     const inputs: Record<string, unknown> = {};
     for (const edge of edges) {
       if (edge.target === nodeId) {
-        // Map source output to target input based on handles
-        const sourceOutput = nodeOutputs.get(edge.source);
-        if (sourceOutput !== undefined) {
-          inputs[edge.targetHandle || "default"] = sourceOutput;
+        // Find the source output to get its handle name or use the handle ID
+        const sourceNode = nodeMap.get(edge.source);
+        const sourceOutputValue = nodeOutputs.get(edge.source);
+
+        if (sourceOutputValue !== undefined) {
+          // If the targetHandle is provided, we map it.
+          // In our AI generation, targetHandle usually refers to the input ID or name.
+          const targetInput = node.inputs.find((i: IOParam) => i.id === edge.targetHandle || i.name === edge.targetHandle);
+          const inputKey = targetInput ? targetInput.name : (edge.targetHandle || "default");
+          inputs[inputKey] = sourceOutputValue;
         }
       }
     }
@@ -217,19 +228,34 @@ export const executeWorkflowHandler = async (
     let output: unknown;
     switch (node.type) {
       case "UserInput":
-        output = node.parameters?.find((p: IOParam) => p.name === "value")?.defaultValue || "Default User Input";
+        // Use module value for UserInput if available, otherwise fallback to parameter
+        const textModule = node.modules?.find((m: any) => m.type === "text");
+        output = textModule?.value || node.parameters?.find((p: IOParam) => p.name === "value")?.defaultValue || "Default User Input";
         break;
       case "AIModule":
         const systemPrompt = node.parameters?.find((p: IOParam) => p.name === "systemPrompt")?.defaultValue || "You are a helpful AI.";
-        const model = node.parameters?.find((p: IOParam) => p.name === "model")?.defaultValue || "gpt-4o";
-        const aiInput = inputs["default"] || "No input provided for AI";
+        const modelName = node.parameters?.find((p: IOParam) => p.name === "model")?.defaultValue || "gpt-4o";
 
-        // Placeholder for actual AI call inside graph execution
-        console.log(`AIModule ${node.label} processing with prompt: "${systemPrompt}", input: "${aiInput}", model: "${model}"`);
-        output = `Processed by AI: ${aiInput} (via ${model} with prompt: "${systemPrompt}")`;
+        // AIModule expects 'source' input based on WorkflowGraphSchema in generateWorkflowHandler
+        const aiInput = inputs["source"] || inputs["default"] || "No input provided for AI";
+
+        console.log(`AIModule ${node.label} processing with prompt: "${systemPrompt}", input: "${aiInput}", model: "${modelName}"`);
+
+        try {
+          const { text } = await generateText({
+            model: openai(modelName as string || "gpt-4o"),
+            system: systemPrompt as string,
+            prompt: aiInput as string,
+          });
+          output = text;
+        } catch (error) {
+          console.error(`Error in AIModule ${node.id}:`, error);
+          output = `Error: ${error instanceof Error ? error.message : "AI generation failed"}`;
+        }
         break;
       case "PreviewOutput":
-        output = inputs["default"] || null;
+        // PreviewOutput expects 'content' input
+        output = inputs["content"] || inputs["default"] || null;
         break;
       default:
         console.warn(`Unknown node type: ${node.type}. Skipping execution for node ${node.id}`);
@@ -239,11 +265,17 @@ export const executeWorkflowHandler = async (
     executionEvents.push({ nodeId: node.id, status: "completed", output: output });
   }
 
-  // Fixed implicitly 'any' type on node param
+  // Find the PreviewOutput node or the last node in the topological order
   const previewOutputNode = (nodes as any[]).find((node: UINode) => node.type === "PreviewOutput") as UINode | undefined;
-  const finalOutput = previewOutputNode
-    ? nodeOutputs.get(previewOutputNode.id)
-    : (topologicalOrder.length > 0 ? nodeOutputs.get(topologicalOrder[topologicalOrder.length - 1]) : "Workflow executed with no specific output.");
+  let finalOutput: unknown;
+
+  if (previewOutputNode && nodeOutputs.has(previewOutputNode.id)) {
+    finalOutput = nodeOutputs.get(previewOutputNode.id);
+  } else if (topologicalOrder.length > 0) {
+    finalOutput = nodeOutputs.get(topologicalOrder[topologicalOrder.length - 1]);
+  } else {
+    finalOutput = "Workflow executed with no nodes.";
+  }
 
   return { events: executionEvents, finalOutput: finalOutput };
 };

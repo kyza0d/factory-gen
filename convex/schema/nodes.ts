@@ -29,6 +29,10 @@ export const UINodeSchema = z.object({
   parameters: z.array(IOParamSchema).describe("Configurable parameters for the node (can be empty)."),
   agentDefinitionId: z.string().nullable().describe("Reference to an agent definition (or null)."),
   uiComponent: z.string().nullable().describe("Name of a specific React component to render."),
+  position: z.object({
+    x: z.number(),
+    y: z.number(),
+  }).optional().describe("Coordinates for positioning the node on the canvas."),
   modules: z.array(z.object({
     id: z.string().describe("Unique identifier for the module (UUID)."),
     type: z.string().describe("Type of the module (e.g., 'text', 'image')."),

@@ -1,55 +1,37 @@
 "use client";
 
+import React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Node } from "./Node";
 
 interface WorkflowCanvasProps {
   executingNodeIds: string[];
+  nodeResults?: Record<string, unknown>;
 }
 
-export function WorkflowCanvas({ executingNodeIds }: WorkflowCanvasProps) {
+export function WorkflowCanvas({ executingNodeIds, nodeResults = {} }: WorkflowCanvasProps) {
   const nodes = useQuery(api.nodes.getNodesByWorkflow, { workflowId: "default" });
   const edges = useQuery(api.nodes.getEdgesByWorkflow, { workflowId: "default" });
   const updateNode = useMutation(api.nodes.updateNode);
 
-  return (
-    <div className="relative w-full h-full bg-gray-50 dark:bg-gray-800 rounded-lg overflow-hidden">
-      {nodes?.map((node) => (
-        <Node
-          key={node._id}
-          node={node}
-          onModuleValueChange={handleModuleValueChange}
-          onParameterValueChange={handleParameterValueChange}
-          isExecuting={executingNodeIds.includes(node.id)}
-        />
-      ))}
+  const [draggingNodes, setDraggingNodes] = React.useState<Record<string, { x: number; y: number }>>({});
 
-      {/* Edge Info Overlay */}
-      {edges && edges.length > 0 && (
-        <div className="absolute top-4 right-4 bg-white/80 dark:bg-gray-900/80 p-2 rounded shadow text-xs text-gray-600 dark:text-gray-400 z-10">
-          Connections: {edges.length}
-        </div>
-      )}
+  const handleNodeDrag = React.useCallback((
+    nodeId: string,
+    position: { x: number; y: number }
+  ) => {
+    setDraggingNodes(prev => ({
+      ...prev,
+      [nodeId]: position
+    }));
+  }, []);
 
-      {nodes === undefined && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400">
-          Loading nodes...
-        </div>
-      )}
-      {nodes?.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-500 dark:text-gray-400">
-          No nodes yet. Describe one below to get started!
-        </div>
-      )}
-    </div>
-  );
-  
-  async function handleModuleValueChange(
+  const handleModuleValueChange = React.useCallback(async (
     nodeId: string,
     moduleId: string,
     newValue: unknown
-  ) {
+  ) => {
     if (!nodes) return;
 
     const nodeToUpdate = nodes.find((node) => node.id === nodeId);
@@ -67,13 +49,13 @@ export function WorkflowCanvas({ executingNodeIds }: WorkflowCanvasProps) {
     } catch (error) {
       console.error("Failed to update module value:", error);
     }
-  }
+  }, [nodes, updateNode]);
 
-  async function handleParameterValueChange(
+  const handleParameterValueChange = React.useCallback(async (
     nodeId: string,
     parameterId: string,
     newValue: unknown
-  ) {
+  ) => {
     if (!nodes) return;
 
     const nodeToUpdate = nodes.find((node) => node.id === nodeId);
@@ -91,5 +73,125 @@ export function WorkflowCanvas({ executingNodeIds }: WorkflowCanvasProps) {
     } catch (error) {
       console.error("Failed to update parameter value:", error);
     }
-  }
+  }, [nodes, updateNode]);
+
+  const handlePositionChange = React.useCallback(async (
+    nodeId: string,
+    newPosition: { x: number; y: number }
+  ) => {
+    try {
+      // First, update the database
+      await updateNode({
+        id: nodeId,
+        updates: { position: newPosition },
+      });
+      // After successful database update, then clear the local dragging state
+      setDraggingNodes(prev => {
+        const newState = { ...prev };
+        delete newState[nodeId];
+        return newState;
+      });
+    } catch (error) {
+      console.error("Failed to update node position:", error);
+    }
+  }, [updateNode]);
+
+  return (
+    <div className="absolute inset-0 overflow-auto">
+      <div className="min-w-[2000px] min-h-[2000px] relative">
+        {nodes?.map((node) => (
+          <Node
+            key={node._id}
+            node={node}
+            onModuleValueChange={handleModuleValueChange}
+            onParameterValueChange={handleParameterValueChange}
+            onPositionChange={handlePositionChange}
+            onDrag={handleNodeDrag} // Pass the new drag handler
+            isExecuting={executingNodeIds.includes(node.id)}
+            result={nodeResults[node.id]}
+          />
+        ))}
+
+        {/* Edge Visualization */}
+        {edges && nodes && (
+          <svg className="absolute inset-0 pointer-events-none w-full h-full overflow-visible">
+            {edges.map((edge) => {
+              const sourceNode = nodes.find((n) => n.id === edge.source);
+              const targetNode = nodes.find((n) => n.id === edge.target);
+              if (!sourceNode || !targetNode) return null;
+
+              // Use dragging position if available, otherwise use stored position
+              const currentSourcePosition = draggingNodes[sourceNode.id] || sourceNode.position;
+              const currentTargetPosition = draggingNodes[targetNode.id] || targetNode.position;
+
+              const sourceWidth = sourceNode.type === "PreviewOutput" ? 320 : 256;
+
+              // Calculate port indices
+              const sourcePortIndex = sourceNode.outputs?.findIndex(o => o.id === edge.sourceHandle) ?? 0;
+              const targetPortIndex = targetNode.inputs?.findIndex(i => i.id === edge.targetHandle) ?? 0;
+
+              // --- Recalculated Offsets based on Node.tsx layout ---
+              const headerHeight = 42; // Accounting for Badge height, padding, and 2px borders
+              const ioSectionPaddingTop = 8; // py-2 on the IO Section div
+              const portDotOffset = -2; // Align with the center of the port dots (accounts for 2px border)
+
+              const x1 = (currentSourcePosition?.x || 50) + sourceWidth + portDotOffset - 6; // Shifted 6px left
+              const y1 = (currentSourcePosition?.y || 50) + headerHeight + ioSectionPaddingTop + sourcePortIndex
+
+              const x2 = (currentTargetPosition?.x || 50) - portDotOffset - 6; // Shifted 6px left
+              const y2 = (currentTargetPosition?.y || 50) + headerHeight + ioSectionPaddingTop + targetPortIndex
+
+              // Path calculation: Rounded Orthogonal (Step)
+              const midX = x1 + (x2 - x1) / 2;
+              const borderRadius = Math.min(20, Math.max(0, (x2 - x1) / 2), Math.abs(y2 - y1) / 2);
+
+              const isUp = y2 < y1;
+              const r = isUp ? -borderRadius : borderRadius;
+
+              const d = `
+                M ${x1} ${y1}
+                L ${midX - borderRadius} ${y1}
+                Q ${midX} ${y1} ${midX} ${y1 + r}
+                L ${midX} ${y2 - r}
+                Q ${midX} ${y2} ${midX + borderRadius} ${y2}
+                L ${x2} ${y2}
+              `;
+
+              return (
+                <g key={edge.id}>
+                  {/* Main dashed edge */}
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke="var(--color-background-500)"
+                    strokeWidth="1.5"
+                    strokeDasharray="6 6"
+                  />
+                  {/* Interactive/Hover area */}
+                  <path
+                    d={d}
+                    fill="none"
+                    stroke="transparent"
+                    strokeWidth="10"
+                    className="pointer-events-auto cursor-pointer"
+                  />
+                </g>
+              );
+            })}
+          </svg>
+        )}
+      </div>
+
+      {nodes === undefined && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          Fetching Nodes...
+        </div>
+      )}
+      {nodes?.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center">
+          No Nodes Found
+        </div>
+      )}
+    </div>
+  );
 }

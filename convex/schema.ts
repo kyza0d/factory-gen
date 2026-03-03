@@ -11,6 +11,10 @@ export default defineSchema({
     parameters: v.array(v.any()),
     agentDefinitionId: v.optional(v.union(v.string(), v.null())),
     uiComponent: v.optional(v.union(v.string(), v.null())),
+    position: v.optional(v.object({
+      x: v.number(),
+      y: v.number(),
+    })),
     workflowId: v.optional(v.string()), // ID of the workflow it belongs to
     modules: v.optional(v.union(v.array(v.object({ id: v.string(), type: v.string(), label: v.string(), value: v.optional(v.union(v.string(), v.null())) })), v.null())),
   }).index("by_workflowId", ["workflowId"]),
