@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
-import { createFileHandler, getFilesHandler } from "./files";
-import { MutationCtx, QueryCtx } from "./_generated/server";
+import { createFileHandler, getFilesHandler } from "../files";
+import { MutationCtx, QueryCtx } from "../_generated/server";
 
 describe("File Management Handlers", () => {
   it("creates a new file and returns its ID", async () => {

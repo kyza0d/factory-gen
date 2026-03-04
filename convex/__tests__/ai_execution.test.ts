@@ -1,7 +1,7 @@
 import { describe, it, expect, vi } from "vitest";
-import { executeWorkflowHandler } from "./ai";
-import { ActionCtx } from "./_generated/server";
-import { UINode } from "./schema/nodes";
+import { executeWorkflowHandler } from "../ai";
+import { ActionCtx } from "../_generated/server";
+import { UINode } from "../schema/nodes";
 
 vi.mock("ai", () => ({
   generateText: vi.fn(({ system, prompt }) => Promise.resolve({

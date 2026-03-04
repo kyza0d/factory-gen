@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { generateNodeHandler } from "./ai";
-import { UINodeSchema, UINode } from "./schema/nodes";
-import { ActionCtx } from "./_generated/server";
+import { generateNodeHandler } from "../ai";
+import { UINodeSchema, UINode } from "../schema/nodes";
+import { ActionCtx } from "../_generated/server";
 
 // Mock the Convex action context and arguments
 const mockCtx: ActionCtx = {

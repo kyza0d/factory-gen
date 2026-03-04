@@ -19,8 +19,6 @@ export const createNode = mutation({
     modules: v.optional(v.union(v.array(v.object({ id: v.string(), type: v.string(), label: v.string(), value: v.optional(v.union(v.string(), v.null())) })), v.null())),
   },
   handler: async (ctx, args) => {
-    // 1. Cleanup: If this node belongs to a workflow, delete any existing instance of it
-    // to prevent duplicate nodes with stale data or statuses.
     if (args.workflowId) {
       const existing = await ctx.db
         .query("nodes")
