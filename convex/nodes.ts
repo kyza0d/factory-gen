@@ -1,5 +1,22 @@
 import { mutation, query, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
+import { InputNode } from "./node_types/Input";
+import { AINode } from "./node_types/AI";
+import { OutputNode } from "./node_types/Output";
+import { NodeDefinition } from "./node_types/types";
+
+export * from "./node_types/types";
+
+export const ALL_NODES: NodeDefinition[] = [
+  InputNode,
+  AINode,
+  OutputNode,
+];
+
+export const NodeRegistry: Record<string, NodeDefinition> = ALL_NODES.reduce(
+  (acc, node) => ({ ...acc, [node.type]: node }),
+  {}
+);
 
 /**
  * Stores a new UI node in the database.

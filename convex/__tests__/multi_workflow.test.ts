@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { createWorkflowHandler } from "../node_operations";
+import { createWorkflowHandler } from "../nodes";
 import { MutationCtx } from "../_generated/server";
 
 describe("Multi-Workflow Management", () => {
