@@ -103,7 +103,7 @@ export function WorkflowCanvas({ nodeStatuses, nodeResults = {} }: WorkflowCanva
         {nodes?.map((node) => (
           <Node
             key={node._id}
-            node={node}
+            node={node as any}
             onModuleValueChange={handleModuleValueChange}
             onParameterValueChange={handleParameterValueChange}
             onPositionChange={handlePositionChange}
