@@ -16,6 +16,10 @@ FactoryGen is built with a modern, full-stack architecture:
 -   **Styling:** Global CSS (`app/globals.css`) and PostCSS are used for styling.
 -   **Development Tools:** The project uses TypeScript for type safety, ESLint for code quality, and pnpm for package management.
 
+## Screenshots
+![FactoryGen Preview](public/assets/preview.png)
+
+
 ## Getting Started
 
 To get a local copy up and running, follow these simple steps.
