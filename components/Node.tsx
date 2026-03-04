@@ -130,15 +130,16 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                   )}
                   {param.options && (
                     <Select
-                    // defaultValue={param.defaultValue as string || ""}
+                      defaultValue={param.defaultValue as string || ""}
+                      className="rounded-sm overflow-hidden"
                     // onSelectionChange={(e) => onParameterValueChange(node.id, param.id, e.target.value)}
                     >
                       <Select.Trigger>
-                        <Select.Value placeholder="Select an option" />
+                        <Select.Value placeholder="Select an option" className="rounded-xl!" />
                       </Select.Trigger>
-                      <Select.Content>
+                      <Select.Content className="rounded-sm">
                         {param.options.map(opt => (
-                          <Select.Item key={opt} value={opt}>{opt}</Select.Item>
+                          <Select.Item className="rounded-xs" key={opt} value={opt}>{opt}</Select.Item>
                         ))}
                       </Select.Content>
                     </Select>

@@ -147,12 +147,7 @@
   --radius-full: 9999px;
   --radius-ratio: 3.75;
 
-  --border-width-none: 0.0px;
-  --border-width-thin: 2.0px;
-  --border-width-base: 2.0px;
-  --border-width-2: 4.0px;
-  --border-width-4: 8.0px;
-  --border-width-8: 16.0px;
+  --default-border-width: 1.5px;
 }
 
 @layer utilities {
