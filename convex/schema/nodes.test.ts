@@ -8,6 +8,8 @@ describe("UI Node Schemas", () => {
       name: "Input 1",
       type: "string",
       description: "A test input",
+      defaultValue: null,
+      options: null,
     };
     const result = IOParamSchema.safeParse(validIO);
     expect(result.success).toBe(true);
@@ -34,6 +36,8 @@ describe("UI Node Schemas", () => {
           name: "text",
           type: "string",
           description: "Input text to summarize",
+          defaultValue: null,
+          options: null,
         },
       ],
       outputs: [
@@ -42,6 +46,8 @@ describe("UI Node Schemas", () => {
           name: "summary",
           type: "string",
           description: "The summarized text",
+          defaultValue: null,
+          options: null,
         },
       ],
       parameters: [
@@ -51,6 +57,7 @@ describe("UI Node Schemas", () => {
           type: "number",
           defaultValue: 100,
           description: "Maximum length of the summary",
+          options: null,
         },
       ],
       uiComponent: "TextSummarizerNode",

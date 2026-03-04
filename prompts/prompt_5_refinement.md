@@ -14,7 +14,7 @@ Refine the Visual Workflow Editor to provide a more intuitive user experience by
 - **Execute Button:** Add a prominent "Run" or "Execute" button to the Workflow Canvas or the main UI header.
 - **Execution Engine:** Implement a backend service (Convex action/mutation) that traverses the current workflow graph, processes data through each node's logic (e.g., calling AI models), and outputs the final result.
 - **Visual Feedback:** Provide real-time visual cues on the canvas (e.g., highlighting nodes as they process) to show the execution progress.
-- **Result Display:** Ensure the output of the "PreviewOutput" node (or the final node in the chain) is clearly displayed to the user after execution.
+- **Result Display:** Ensure the output of the "Output" node (or the final node in the chain) is clearly displayed to the user after execution.
 
 ## Success Criteria
 - Users can type any workflow-related request into one box and see the correct result (single node or full graph).

@@ -14,18 +14,19 @@ vi.mock("ai", () => ({
       nodes: [
         {
           id: "node-1",
-          type: "UserInput",
+          type: "Input",
           label: "User Input",
           inputs: [],
           outputs: [{ id: "out-1", name: "input", type: "string", description: "User input text", defaultValue: null, options: null }],
           parameters: [],
           agentDefinitionId: null,
-          uiComponent: "UserInputNode",
+          uiComponent: "InputNode",
+          position: { x: 0, y: 0 },
           modules: [{ id: "mod-1", type: "text", label: "Enter text", value: null }], 
         } as UINode,
         {
           id: "node-2",
-          type: "AIModule",
+          type: "AI",
           label: "AI Refiner",
           inputs: [{ id: "in-1", name: "source", type: "string", description: "Input to refine", defaultValue: null, options: null }],
           outputs: [{ id: "out-2", name: "result", type: "string", description: "Refined output", defaultValue: null, options: null }],
@@ -33,18 +34,20 @@ vi.mock("ai", () => ({
             { id: "param-1", name: "systemPrompt", type: "string", description: "AI instructions", defaultValue: "Refine this text.", options: null },
           ] as IOParam[], 
           agentDefinitionId: null,
-          uiComponent: "AIModuleNode",
+          uiComponent: "AINode",
+          position: { x: 0, y: 0 },
           modules: [],
         } as UINode,
         {
           id: "node-3",
-          type: "PreviewOutput",
+          type: "Output",
           label: "Preview Output",
           inputs: [{ id: "in-2", name: "content", type: "string", description: "Content to display", defaultValue: null, options: null }],
           outputs: [],
           parameters: [],
           agentDefinitionId: null,
-          uiComponent: "PreviewOutputNode",
+          uiComponent: "OutputNode",
+          position: { x: 0, y: 0 },
           modules: [],
         } as UINode,
       ],
@@ -55,7 +58,7 @@ vi.mock("ai", () => ({
     } as WorkflowGraph,
   })),
   Output: {
-    object: vi.fn((_) => ({})),
+    object: vi.fn(() => ({})),
   },
 }));
 
@@ -79,7 +82,7 @@ describe("AI Workflow Generation Convex Action", () => {
 
     // We don't need to mock generateObject again as it's already mocked globally
     const { generateText } = await import("ai");
-    const mockResponse = (await (generateText as any)({})).output;
+    const mockResponse = (await generateText({} as any)).output;
 
     expect(result).toEqual(mockResponse);
     expect(WorkflowGraphSchema.safeParse(result).success).toBe(true);

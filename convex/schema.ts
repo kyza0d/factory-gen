@@ -17,7 +17,9 @@ export default defineSchema({
     })),
     workflowId: v.optional(v.string()), // ID of the workflow it belongs to
     modules: v.optional(v.union(v.array(v.object({ id: v.string(), type: v.string(), label: v.string(), value: v.optional(v.union(v.string(), v.null())) })), v.null())),
-  }).index("by_workflowId", ["workflowId"]),
+  })
+    .index("by_workflowId", ["workflowId"])
+    .index("by_workflowId_nodeId", ["workflowId", "id"]),
 
   workflows: defineTable({
     id: v.string(), // External UUID

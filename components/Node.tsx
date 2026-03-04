@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useEffect } from "react";
 import Draggable from "react-draggable";
-import { UINode, IOParam } from "../convex/schema/nodes";
+import { UINode, IOParam, NodeExecutionStatus } from "../convex/schema/nodes";
 import { DebouncedInput } from "./DebouncedInput";
 import { Badge, Input, Select } from "ui-lab-components";
 import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaRegTrashCan, FaRegImage, FaQuestion } from "react-icons/fa6";
@@ -13,14 +13,14 @@ interface NodeProps {
   onParameterValueChange: (nodeId: string, parameterId: string, newValue: unknown) => void;
   onPositionChange: (nodeId: string, position: { x: number; y: number }) => void;
   onDrag?: (nodeId: string, position: { x: number; y: number }) => void;
-  isExecuting: boolean;
+  executionStatus?: NodeExecutionStatus;
   result?: unknown;
 }
 
 const nodeTypeIcons: Record<string, React.ElementType> = {
-  UserInput: FaRegUser,
-  AIModule: FaAtom,
-  PreviewOutput: FaRegEye,
+  Input: FaRegUser,
+  AI: FaAtom,
+  Output: FaRegEye,
   TextSummarizer: FaFileLines,
   ImageGenerator: FaRegImage,
   InvalidNode: FaRegTrashCan,
@@ -39,17 +39,41 @@ const Port: React.FC<{ port: IOParam; type: "input" | "output" }> = ({
       }`}
   >
     {type === "input" && (
-      <div className="absolute left-[-4px] w-2 h-2 rounded-full border border-background-600 bg-background-800" />
+      <div className="absolute left-[-4px] -translate-y-1/2 top-1/2 w-2 h-2 rounded-full border border-background-600 bg-background-800" />
     )}
     {type === "output" && (
-      <div className="absolute right-[-4px] w-2 h-2 rounded-full border border-background-600 bg-background-800" />
+      <div className="absolute right-[-4px] -translate-y-1/2 top-1/2 w-2 h-2 rounded-full border border-background-600 bg-background-800" />
     )}
   </div>
 );
 
-export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange, onParameterValueChange, onPositionChange, onDrag, isExecuting, result }) => {
+export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange, onParameterValueChange, onPositionChange, onDrag, executionStatus, result }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
   const IconComponent = nodeTypeIcons[node.type] || nodeTypeIcons.default;
+
+  const getBorderColorClass = (status?: NodeExecutionStatus) => {
+    switch (status) {
+      case "success":
+        return "border-success-500";
+      case "warning":
+        return "border-warning-500";
+      case "danger":
+        return "border-danger-500";
+      case "pending":
+        return "border-info-500 animate-pulse"; // Using info for pending, and animate-pulse for visual feedback
+      default:
+        return "border-background-600";
+    }
+  };
+
+  useEffect(() => {
+    if (node.type === "Output" && result !== undefined) {
+      const textModule = node.modules?.find((m) => m.type === "text");
+      if (textModule && textModule.value !== String(result)) {
+        onModuleValueChange(node.id, textModule.id, String(result));
+      }
+    }
+  }, [node.id, node.type, node.modules, result, onModuleValueChange]);
 
   return (
     <Draggable
@@ -61,19 +85,16 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
     >
       <div
         ref={nodeRef}
-        className={`absolute bg-background-800 border border-background-600 rounded-sm group ${node.type === "PreviewOutput" ? "w-80" : "w-64"}`}
+        className={`absolute bg-background-800 border ${getBorderColorClass(executionStatus)} rounded-sm group ${node.type === "Output" ? "w-80" : "w-64"}`}
       >
-        <div>
+        <div className="relative">
           <div className="flex bg-background-700 p-2 rounded-t-sm border-b border-background-600 items-center justify-between drag-handle">
             <div className="flex items-center gap-2">
               <Badge icon={<IconComponent className="text-foreground-400" />} size="sm" className="bg-background-600">
-                {node.type}
+                {node.label}
               </Badge>
             </div>
           </div>
-        </div>
-
-        <div className="flex flex-col">
           {/* IO Section */}
           {((node.inputs && node.inputs.length > 0) || (node.outputs && node.outputs.length > 0)) && (
             <div className="grid grid-cols-2">
@@ -89,12 +110,15 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
               </div>
             </div>
           )}
+        </div>
+
+        <div className="flex flex-col">
           {node.parameters && node.parameters.length > 0 && (
             <div className="p-3">
-              <p className="mb-1">Parameters</p>
+              <p className="mb-1 text-xs font-semibold">Parameters</p>
               {node.parameters.map((param) => (
                 <div key={param.id} className="mb-2">
-                  <label className="block">
+                  <label className="text-xs capitalize font-semibold block">
                     {param.name}
                   </label>
                   {(param.type === "string" || !param.type) && !param.options && (
@@ -125,30 +149,21 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
           )}
           {node.modules && node.modules.length > 0 && (
             <div className="p-3">
-              <p className="text-xs font-medium mb-1">Modules</p>
+              <p className="text-xs font-semibold mb-1">Modules</p>
               {node.modules.map((module) => (
                 <div key={module.id} className="mb-2">
-                  <label className="block font-medium text-xs">
+                  <label className="block mt-6 font-semibold text-xs">
                     {module.label}
                   </label>
                   {module.type === "text" && (
                     <DebouncedInput
-                      type="text"
-                      value={module.value || ""}
+                      value={(node.type === "Output" && result !== undefined) ? String(result) : (module.value || "")}
                       onChange={(newValue) => onModuleValueChange(node.id, module.id, newValue)}
                       className="mt-1 block w-full p-1 no-drag"
                     />
                   )}
                 </div>
               ))}
-            </div>
-          )}
-          {node.type === "PreviewOutput" && result !== undefined && (
-            <div className="p-3">
-              <p className="text-xs font-medium mb-1">Output</p>
-              <pre className="max-h-40 overflow-y-auto bg-background-900 p-2 rounded text-xs text-wrap break-all">
-                {String(result)}
-              </pre>
             </div>
           )}
         </div>

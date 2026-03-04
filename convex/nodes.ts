@@ -19,6 +19,20 @@ export const createNode = mutation({
     modules: v.optional(v.union(v.array(v.object({ id: v.string(), type: v.string(), label: v.string(), value: v.optional(v.union(v.string(), v.null())) })), v.null())),
   },
   handler: async (ctx, args) => {
+    // 1. Cleanup: If this node belongs to a workflow, delete any existing instance of it
+    // to prevent duplicate nodes with stale data or statuses.
+    if (args.workflowId) {
+      const existing = await ctx.db
+        .query("nodes")
+        .withIndex("by_workflowId_nodeId", (q) =>
+          q.eq("workflowId", args.workflowId!).eq("id", args.id)
+        )
+        .first();
+      if (existing) {
+        await ctx.db.delete(existing._id);
+      }
+    }
+
     const nodeId = await ctx.db.insert("nodes", {
       ...args,
     });
@@ -80,15 +94,41 @@ export const createWorkflow = mutation({
   },
   handler: async (ctx, args) => {
     const { workflow } = args;
-    
-    // Insert the workflow itself
+
+    // 1. Cleanup: Delete existing workflow data for the same ID to prevent accumulation
+    // and stale execution states (e.g., green "success" borders from previous runs).
+    const existingWorkflow = await ctx.db
+      .query("workflows")
+      .filter((q) => q.eq(q.field("id"), workflow.id))
+      .first();
+    if (existingWorkflow) {
+      await ctx.db.delete(existingWorkflow._id);
+    }
+
+    const existingNodes = await ctx.db
+      .query("nodes")
+      .withIndex("by_workflowId", (q) => q.eq("workflowId", workflow.id))
+      .collect();
+    for (const node of existingNodes) {
+      await ctx.db.delete(node._id);
+    }
+
+    const existingEdges = await ctx.db
+      .query("edges")
+      .withIndex("by_workflowId", (q) => q.eq("workflowId", workflow.id))
+      .collect();
+    for (const edge of existingEdges) {
+      await ctx.db.delete(edge._id);
+    }
+
+    // 2. Insert the workflow itself
     await ctx.db.insert("workflows", {
       id: workflow.id,
       name: workflow.name,
       description: workflow.description,
     });
 
-    // Insert all nodes
+    // 3. Insert all nodes
     for (const node of workflow.nodes) {
       await ctx.db.insert("nodes", {
         ...node,
@@ -96,7 +136,7 @@ export const createWorkflow = mutation({
       });
     }
 
-    // Insert all edges
+    // 4. Insert all edges
     for (const edge of workflow.edges) {
       await ctx.db.insert("edges", {
         ...edge,

@@ -23,11 +23,12 @@ vi.mock("ai", () => ({
       parameters: [],
       agentDefinitionId: null,
       uiComponent: "TextSummarizerNode",
+      position: { x: 0, y: 0 },
       modules: [],
     } as UINode,
   })),
   Output: {
-    object: vi.fn((_) => ({})),
+    object: vi.fn(() => ({})),
   },
 }));
 
@@ -53,7 +54,7 @@ describe("AI Generation Convex Action", () => {
 
     // We don't need to mock generateObject again as it's already mocked globally
     const { generateText } = await import("ai");
-    const mockResponse = (await (generateText as any)({})).output;
+    const mockResponse = (await generateText({} as any)).output;
 
     expect(result).toEqual(mockResponse);
     expect(UINodeSchema.safeParse(result).success).toBe(true);

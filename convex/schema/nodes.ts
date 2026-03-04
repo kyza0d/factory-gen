@@ -17,6 +17,8 @@ export const IOParamSchema = z.object({
   options: z.array(z.string()).nullable().describe("Optional list of choices for dropdowns/enums (or null)."),
 });
 
+export const NodeExecutionStatusSchema = z.enum(["idle", "pending", "success", "warning", "danger"]);
+
 /**
  * Schema for a UI Node structure.
  */
@@ -32,7 +34,7 @@ export const UINodeSchema = z.object({
   position: z.object({
     x: z.number(),
     y: z.number(),
-  }).optional().describe("Coordinates for positioning the node on the canvas."),
+  }).describe("Coordinates for positioning the node on the canvas."),
   modules: z.array(z.object({
     id: z.string().describe("Unique identifier for the module (UUID)."),
     type: z.string().describe("Type of the module (e.g., 'text', 'image')."),
@@ -62,3 +64,4 @@ export type ValueType = z.infer<typeof ValueTypeSchema>;
 export type IOParam = z.infer<typeof IOParamSchema>;
 export type UINode = z.infer<typeof UINodeSchema>;
 export type WorkflowGraph = z.infer<typeof WorkflowGraphSchema>;
+export type NodeExecutionStatus = z.infer<typeof NodeExecutionStatusSchema>;

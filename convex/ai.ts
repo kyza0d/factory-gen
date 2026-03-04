@@ -1,14 +1,15 @@
-import { action, internalQuery, ActionCtx, QueryCtx } from "./_generated/server";
+import { action, internalMutation, internalQuery, ActionCtx, QueryCtx, MutationCtx } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
-import { generateText, Output } from "ai"; // Updated imports for v6
+import { generateText, Output } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { UINodeSchema, WorkflowGraphSchema, UINode, WorkflowGraph, IOParam } from "./schema/nodes";
+import { UINodeSchema, WorkflowGraphSchema, UINode, WorkflowGraph, IOParam, NodeExecutionStatus } from "./schema/nodes"; // eslint-disable-line @typescript-eslint/no-unused-vars
 
 // Define a type for execution events
 export type ExecutionEvent = {
   nodeId: string;
-  status: "started" | "completed";
+  status: "started" | "completed" | "failed";
+  executionStatus: NodeExecutionStatus;
   output?: unknown;
 };
 
@@ -75,21 +76,21 @@ export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: s
       3. Preview Output: A node that displays the final result.
 
       Available Node Types and Requirements:
-      - 'UserInput': Label it "User Input". It should have an output named "input" (type: string) and a 'text' module.
-      - 'AIModule': A general-purpose AI node. It should have:
+      - 'Input': Label it "User Input". It should have an output named "input" (type: string) and a 'text' module.
+      - 'AI': A general-purpose AI node. It should have:
         - Input: "source" (type: string)
         - Output: "result" (type: string)
         - Parameter: "systemPrompt" (type: string, description: "Instructions for the AI")
         - Parameter: "model" (type: string, options: ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"])
-      - 'PreviewOutput': Label it "Preview Output". It should have an input named "content" (type: string) and a 'text' module for displaying the result.
+      - 'Output': Label it "Preview Output". It should have an input named "content" (type: string) and a 'text' module for displaying the result.
 
       Layout nodes logically:
       - Assign 'position' coordinates {x, y} for each node.
-      - Start 'UserInput' at {x: 50, y: 150}.
+      - Start 'Input' at {x: 50, y: 150}.
       - Space nodes horizontally by ~300 pixels (e.g., 350, 650, etc.).
       - Space nodes vertically if there are branches.
 
-      Connect the nodes logically using edges based on the user's request. Ensure each node has a unique UUID.`,
+      Ensure each node has a unique UUID.`,
     });
 
     return output;
@@ -153,7 +154,7 @@ export const executeWorkflowHandler = async (
   const inDegree: Map<string, number> = new Map();
 
   const nodeMap: Map<string, UINode> = new Map(
-    (nodes as any[]).map((node: UINode) => [node.id, node])
+    (nodes as UINode[]).map((node) => [node.id, node])
   );
 
   for (const node of nodes) {
@@ -205,68 +206,77 @@ export const executeWorkflowHandler = async (
       continue; // Should not happen if graph is built correctly
     }
 
-    executionEvents.push({ nodeId: node.id, status: "started" });
-
-    // Determine inputs for the current node from previous node outputs
-    const inputs: Record<string, unknown> = {};
-    for (const edge of edges) {
-      if (edge.target === nodeId) {
-        // Find the source output to get its handle name or use the handle ID
-        const sourceNode = nodeMap.get(edge.source);
-        const sourceOutputValue = nodeOutputs.get(edge.source);
-
-        if (sourceOutputValue !== undefined) {
-          // If the targetHandle is provided, we map it.
-          // In our AI generation, targetHandle usually refers to the input ID or name.
-          const targetInput = node.inputs.find((i: IOParam) => i.id === edge.targetHandle || i.name === edge.targetHandle);
-          const inputKey = targetInput ? targetInput.name : (edge.targetHandle || "default");
-          inputs[inputKey] = sourceOutputValue;
-        }
-      }
-    }
+    executionEvents.push({ nodeId: node.id, status: "started", executionStatus: "pending" });
 
     let output: unknown;
-    switch (node.type) {
-      case "UserInput":
-        // Use module value for UserInput if available, otherwise fallback to parameter
-        const textModule = node.modules?.find((m: any) => m.type === "text");
-        output = textModule?.value || node.parameters?.find((p: IOParam) => p.name === "value")?.defaultValue || "Default User Input";
-        break;
-      case "AIModule":
-        const systemPrompt = node.parameters?.find((p: IOParam) => p.name === "systemPrompt")?.defaultValue || "You are a helpful AI.";
-        const modelName = node.parameters?.find((p: IOParam) => p.name === "model")?.defaultValue || "gpt-4o";
+    try {
+      // Determine inputs for the current node from previous node outputs
+      const inputs: Record<string, unknown> = {};
+      for (const edge of edges) {
+        if (edge.target === nodeId) {
+          // Find the source output to get its handle name or use the handle ID
+          const sourceOutputValue = nodeOutputs.get(edge.source);
 
-        // AIModule expects 'source' input based on WorkflowGraphSchema in generateWorkflowHandler
-        const aiInput = inputs["source"] || inputs["default"] || "No input provided for AI";
-
-        console.log(`AIModule ${node.label} processing with prompt: "${systemPrompt}", input: "${aiInput}", model: "${modelName}"`);
-
-        try {
-          const { text } = await generateText({
-            model: openai(modelName as string || "gpt-4o"),
-            system: systemPrompt as string,
-            prompt: aiInput as string,
-          });
-          output = text;
-        } catch (error) {
-          console.error(`Error in AIModule ${node.id}:`, error);
-          output = `Error: ${error instanceof Error ? error.message : "AI generation failed"}`;
+          if (sourceOutputValue !== undefined) {
+            // If the targetHandle is provided, we map it.
+            // In our AI generation, targetHandle usually refers to the input ID or name.
+            const targetInput = node.inputs.find((i: IOParam) => i.id === edge.targetHandle || i.name === edge.targetHandle);
+            const inputKey = targetInput ? targetInput.name : (edge.targetHandle || "default");
+            inputs[inputKey] = sourceOutputValue;
+          }
         }
-        break;
-      case "PreviewOutput":
-        // PreviewOutput expects 'content' input
-        output = inputs["content"] || inputs["default"] || null;
-        break;
-      default:
-        console.warn(`Unknown node type: ${node.type}. Skipping execution for node ${node.id}`);
-        output = null;
+      }
+
+      switch (node.type) {
+        case "Input":
+          // Use module value for Input if available, otherwise fallback to parameter
+          const textModule = node.modules?.find((m) => m.type === "text");
+          output = textModule?.value || node.parameters?.find((p: IOParam) => p.name === "value")?.defaultValue || "Default User Input";
+          break;
+        case "AI":
+          const systemPrompt = node.parameters?.find((p: IOParam) => p.name === "systemPrompt")?.defaultValue || "You are a helpful AI.";
+          const modelName = node.parameters?.find((p: IOParam) => p.name === "model")?.defaultValue || "gpt-4o";
+
+          // AI expects 'source' input based on WorkflowGraphSchema in generateWorkflowHandler
+          const aiInput = inputs["source"] || inputs["default"] || "No input provided for AI";
+
+          console.log(`AI ${node.label} processing with prompt: "${systemPrompt}", input: "${aiInput}", model: "${modelName}"`);
+
+          try {
+            const { text } = await generateText({
+              model: openai(modelName as string || "gpt-4o"),
+              system: systemPrompt as string,
+              prompt: aiInput as string,
+            });
+            output = text;
+          } catch (error) {
+            console.error(`Error in AI ${node.id}:`, error);
+            executionEvents.push({ nodeId: node.id, status: "failed", executionStatus: "danger", output: `Error: ${error instanceof Error ? error.message : "AI generation failed"}` });
+            throw error;
+          }
+          break;
+        case "Output":
+          // Output expects 'content' input
+          output = inputs["content"] || inputs["default"] || null;
+          break;
+        default:
+          console.warn(`Unknown node type: ${node.type}. Skipping execution for node ${node.id}`);
+          output = null;
+      }
+      nodeOutputs.set(nodeId, output);
+      executionEvents.push({ nodeId: node.id, status: "completed", executionStatus: "success", output: output });
+    } catch (error) {
+      console.error(`Error executing node ${node.id}:`, error);
+      // Ensure a failure event is recorded if not already done in AI catch
+      if (!executionEvents.some(e => e.nodeId === node.id && e.status === "failed")) {
+        executionEvents.push({ nodeId: node.id, status: "failed", executionStatus: "danger", output: error instanceof Error ? error.message : "Execution failed" });
+      }
+      throw error;
     }
-    nodeOutputs.set(nodeId, output);
-    executionEvents.push({ nodeId: node.id, status: "completed", output: output });
   }
 
-  // Find the PreviewOutput node or the last node in the topological order
-  const previewOutputNode = (nodes as any[]).find((node: UINode) => node.type === "PreviewOutput") as UINode | undefined;
+  // Find the Output node or the last node in the topological order
+  const previewOutputNode = (nodes as UINode[]).find((node: UINode) => node.type === "Output") as UINode | undefined;
   let finalOutput: unknown;
 
   if (previewOutputNode && nodeOutputs.has(previewOutputNode.id)) {
