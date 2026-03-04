@@ -53,7 +53,7 @@ export function SidebarContent() {
               <FaRoute size={16} />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-foreground-50 leading-none">NodeGraph</span>
+              <span className='text-xs font-bold text-foreground-50'>FactoryGen</span>
             </div>
           </div>
         )}
