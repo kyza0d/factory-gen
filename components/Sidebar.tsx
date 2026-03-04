@@ -2,16 +2,15 @@
 import { PanelLeft } from 'lucide-react';
 import { useState } from 'react';
 import {
-  FaHouse,
   FaUser,
   FaGear,
   FaRightFromBracket,
-  FaChartPie,
   FaCircleQuestion,
-  FaBriefcase, // Used for Nodes
-  FaCube // Used for Workflows
+  FaRoute,
+  FaShapes,
+  FaBook // Added for Sources
 } from 'react-icons/fa6';
-import { Divider, List, Expand, Group, Button } from 'ui-lab-components'; // Added Expand and Group
+import { Divider, List, Expand, Group, Button } from 'ui-lab-components'; // eslint-disable-line @typescript-eslint/no-unused-vars
 import { IconType } from 'react-icons'; // Import IconType for type-safety
 
 interface NavItemType {
@@ -30,7 +29,8 @@ export function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
 
   const mainNavItems: NavItemType[] = [
     // Workflows will be handled by Expand component
-    { id: 'nodes', label: 'Nodes', icon: FaBriefcase },
+    { id: 'nodes', label: 'Nodes', icon: FaShapes },
+    { id: 'sources', label: 'Sources', icon: FaBook },
     { id: 'agents', label: 'Agents', icon: FaUser },
   ];
 
@@ -45,7 +45,7 @@ export function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
   return (
     <aside
       className={`
-        ${isCollapsed ? 'w-16' : 'w-70'} 
+        ${isCollapsed ? 'w-16' : 'w-53'} 
         bg-background-950 border-r border-background-700 
         flex text-xs flex-col transition-all duration-300 ease-in-out
         h-screen sticky top-0
@@ -55,12 +55,11 @@ export function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
       <div className="h-20 flex items-center justify-between px-2 shrink-0">
         {!isCollapsed && (
           <div className="flex items-center gap-4 overflow-hidden whitespace-nowrap animate-in fade-in duration-300">
-            <div className="w-12 h-12 bg-background-800 flex items-center justify-center shrink-0 rounded-sm">
-              <FaCube size={16} />
+            <div className="w-10 h-10 bg-background-800 flex items-center justify-center shrink-0 rounded-sm">
+              <FaRoute size={16} />
             </div>
             <div className="flex flex-col">
-              <span className="font-bold text-foreground-50 leading-none">Factory</span>
-              <span className="text-xs text-foreground-400 mt-1">AI Workflows</span>
+              <span className="font-bold text-foreground-50 leading-none">NodeGraph</span>
             </div>
           </div>
         )}
@@ -81,7 +80,7 @@ export function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
       <Divider />
 
       {/* Navigation Items */}
-      <nav className="px-2 flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar">
+      <nav className="px-2 flex flex-col items-start overflow-y-auto overflow-x-hidden custom-scrollbar">
         {/* Workflows Expand Component */}
         <Expand className='mb-2 ' isExpanded={isWorkflowsExpanded} onExpandedChange={setIsWorkflowsExpanded}>
           <Expand.Trigger>
@@ -94,7 +93,7 @@ export function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
                     ${activeItem === 'workflows' ? 'bg-background-900 text-foreground-100' : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
                   `}
             >
-              <FaCube size={17} className="shrink-0 transition-transform duration-200" />
+              <FaRoute size={17} className="shrink-0 transition-transform duration-200" />
               {!isCollapsed && (
                 <span className="font-medium text-xs whitespace-nowrap overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200">
                   Workflows
@@ -123,7 +122,7 @@ export function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           </Expand.Content>
         </Expand>
 
-        <List aria-label="Main navigation" className="space-y-2">
+        <List aria-label="Main navigation" className="m-0 space-y-2">
           {mainNavItems.map((item) => {
             if (item.id === 'workflows') { // This condition will never be true now since 'workflows' is removed from mainNavItems. We will explicitly add the Expand component.
               return null; // Will not be reached with the current mainNavItems
@@ -139,18 +138,15 @@ export function Sidebar({ activeItem = 'dashboard' }: SidebarProps) {
           })}
 
         </List>
+      </nav>
 
-        <List.Divider />
-
-        <List aria-label="Secondary navigation" className="py-2 space-y-1">
+      {/* Footer */}
+      <div className="mt-auto shrink-0 space-y-1 bg-background-950 z-10">
+        <List aria-label="Secondary navigation" className="mx-2 space-y-1">
           {secondaryNavItems.map((item) => (
             <NavItem key={item.id} item={item} isActive={activeItem === item.id} isCollapsed={isCollapsed} />
           ))}
         </List>
-      </nav>
-
-      {/* Footer */}
-      <div className="shrink-0 space-y-1 bg-background-950 z-10">
         <Divider />
 
         <div className='px-2 pb-2'>

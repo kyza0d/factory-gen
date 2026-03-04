@@ -4,13 +4,14 @@ import React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { Node } from "./Node";
+import { NodeExecutionStatus } from "../convex/schema/nodes";
 
 interface WorkflowCanvasProps {
-  executingNodeIds: string[];
+  nodeStatuses: Record<string, NodeExecutionStatus>;
   nodeResults?: Record<string, unknown>;
 }
 
-export function WorkflowCanvas({ executingNodeIds, nodeResults = {} }: WorkflowCanvasProps) {
+export function WorkflowCanvas({ nodeStatuses, nodeResults = {} }: WorkflowCanvasProps) {
   const nodes = useQuery(api.nodes.getNodesByWorkflow, { workflowId: "default" });
   const edges = useQuery(api.nodes.getEdgesByWorkflow, { workflowId: "default" });
   const updateNode = useMutation(api.nodes.updateNode);
@@ -106,8 +107,8 @@ export function WorkflowCanvas({ executingNodeIds, nodeResults = {} }: WorkflowC
             onModuleValueChange={handleModuleValueChange}
             onParameterValueChange={handleParameterValueChange}
             onPositionChange={handlePositionChange}
-            onDrag={handleNodeDrag} // Pass the new drag handler
-            isExecuting={executingNodeIds.includes(node.id)}
+            onDrag={handleNodeDrag}
+            executionStatus={nodeStatuses[node.id] || "idle"}
             result={nodeResults[node.id]}
           />
         ))}
@@ -120,25 +121,45 @@ export function WorkflowCanvas({ executingNodeIds, nodeResults = {} }: WorkflowC
               const targetNode = nodes.find((n) => n.id === edge.target);
               if (!sourceNode || !targetNode) return null;
 
+              // Derive edge status from connected nodes using ephemeral nodeStatuses
+              const sourceStatus = nodeStatuses[sourceNode.id] || "idle";
+              const targetStatus = nodeStatuses[targetNode.id] || "idle";
+
+              let edgeStroke = "var(--color-background-500)";
+              let strokeDasharray = "6 6";
+              let edgeClassName = "";
+
+              if (sourceStatus === "danger" || targetStatus === "danger") {
+                edgeStroke = "var(--color-danger-500)";
+                strokeDasharray = "none";
+              } else if (sourceStatus === "pending" || targetStatus === "pending") {
+                edgeStroke = "var(--color-info-500)";
+                strokeDasharray = "10 5";
+                edgeClassName = "animate-flow";
+              } else if (sourceStatus === "success" && targetStatus === "success") {
+                edgeStroke = "var(--color-success-500)";
+                strokeDasharray = "none";
+              }
+
               // Use dragging position if available, otherwise use stored position
               const currentSourcePosition = draggingNodes[sourceNode.id] || sourceNode.position;
               const currentTargetPosition = draggingNodes[targetNode.id] || targetNode.position;
 
-              const sourceWidth = sourceNode.type === "PreviewOutput" ? 320 : 256;
+              const sourceWidth = sourceNode.type === "Output" ? 320 : 256;
 
               // Calculate port indices
               const sourcePortIndex = sourceNode.outputs?.findIndex(o => o.id === edge.sourceHandle) ?? 0;
               const targetPortIndex = targetNode.inputs?.findIndex(i => i.id === edge.targetHandle) ?? 0;
 
               // --- Recalculated Offsets based on Node.tsx layout ---
-              const headerHeight = 42; // Accounting for Badge height, padding, and 2px borders
+              const headerHeight = 16; // Accounting for Badge height, padding, and 2px borders
               const ioSectionPaddingTop = 8; // py-2 on the IO Section div
               const portDotOffset = -2; // Align with the center of the port dots (accounts for 2px border)
 
-              const x1 = (currentSourcePosition?.x || 50) + sourceWidth + portDotOffset - 6; // Shifted 6px left
+              const x1 = (currentSourcePosition?.x || 50) + sourceWidth + portDotOffset - 7; // Shifted 7px left
               const y1 = (currentSourcePosition?.y || 50) + headerHeight + ioSectionPaddingTop + sourcePortIndex
 
-              const x2 = (currentTargetPosition?.x || 50) - portDotOffset - 6; // Shifted 6px left
+              const x2 = (currentTargetPosition?.x || 50) - portDotOffset - 7; // Shifted 7px left
               const y2 = (currentTargetPosition?.y || 50) + headerHeight + ioSectionPaddingTop + targetPortIndex
 
               // Path calculation: Rounded Orthogonal (Step)
@@ -163,9 +184,10 @@ export function WorkflowCanvas({ executingNodeIds, nodeResults = {} }: WorkflowC
                   <path
                     d={d}
                     fill="none"
-                    stroke="var(--color-background-500)"
+                    stroke={edgeStroke}
                     strokeWidth="1.5"
-                    strokeDasharray="6 6"
+                    strokeDasharray={strokeDasharray}
+                    className={edgeClassName}
                   />
                   {/* Interactive/Hover area */}
                   <path

@@ -5,6 +5,7 @@ import { useAction, useMutation } from "convex/react";
 import { api } from "../convex/_generated/api";
 import { UINode, WorkflowGraph } from "../convex/schema/nodes";
 import { Button, Input } from "ui-lab-components";
+import { FaPencil } from "react-icons/fa6";
 
 export function PromptInput() {
   const [prompt, setPrompt] = useState("");
@@ -54,22 +55,26 @@ export function PromptInput() {
       <div className="flex space-x-2">
         {/* Unified Generation Control */}
         <form onSubmit={handleSubmit} className="flex-1 flex items-center space-x-2">
-          <Input
-            type="text"
-            variant="ghost"
-            value={prompt}
-            onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Describe Module or Workflow..."
-            className="rounded-full  font-medium flex-grow p-2 px-4"
-            disabled={isLoading}
-          />
-          <Button
-            type="submit"
-            className="rounded-full px-4 py-2"
-            disabled={isLoading}
-          >
-            {isLoading ? "Generating..." : "Send"}
-          </Button>
+          <div className="absolute w-120 h-14 flex bottom-4 right-0 left-0 mx-auto z-10 bg-background-900 border border-background-700 rounded-full  font-medium">
+            <Input
+              type="text"
+              variant="ghost"
+              value={prompt}
+              prefixIcon={<FaPencil className="ml-2" />}
+              onChange={(e) => setPrompt(e.target.value)}
+              placeholder="Describe Module or Workflow..."
+              className="absolute w-120 pl-12 pr-24 h-14 rounded-full"
+              disabled={isLoading}
+            />
+            <Button
+              type="submit"
+              variant="secondary"
+              className="rounded-full z-20 px-6 py-1 my-1 mr-1"
+              disabled={isLoading}
+            >
+              {isLoading ? "Generating..." : "Send"}
+            </Button>
+          </div>
         </form>
       </div>
       {isLoading && (
