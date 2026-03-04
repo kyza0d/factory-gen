@@ -11,9 +11,9 @@ import {
 import { Divider, List } from 'ui-lab-components';
 import { PanelLeft } from 'lucide-react';
 
-import { NavItem } from './NavItem';
-import { WorkflowsSection } from './WorkflowsSection';
-import Logo from '../Logo';
+import { NavItem } from './nav-item';
+import { WorkflowsSection } from './workflows-section';
+import Logo from '../logo';
 
 const MAIN_NAV_ITEMS = [
   { id: 'nodes', label: 'Nodes', icon: FaShapes, href: '/nodes' },

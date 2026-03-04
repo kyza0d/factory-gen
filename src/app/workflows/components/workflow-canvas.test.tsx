@@ -1,7 +1,6 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { WorkflowCanvas } from './WorkflowCanvas';
-import { api } from '../convex/_generated/api';
+import { WorkflowCanvas } from './workflow-canvas';
 
 // Create the mock functions directly here using vi.hoisted to ensure they're available
 // inside the vi.mock factory call which is hoisted to the top.
@@ -17,11 +16,11 @@ vi.mock('convex/react', () => ({
 }));
 
 // Mock the 'Node' component to simplify testing of WorkflowCanvas
-vi.mock('./Node', () => ({
+vi.mock('./node', () => ({
   Node: vi.fn(() => <div>Mocked Node</div>),
 }));
 
-describe('WorkflowCanvas', () => {
+describe('workflow-canvas', () => {
   const mockWorkflowId = 'test-workflow-id';
   const mockNodeStatuses = {};
   const mockNodeResults = {};

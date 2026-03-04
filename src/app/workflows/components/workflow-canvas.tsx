@@ -2,9 +2,9 @@
 
 import React from "react";
 import { useMutation, useQuery } from "convex/react";
-import { api } from "../convex/_generated/api";
-import { Node } from "./Node";
-import { NodeExecutionStatus } from "../convex/schema/nodes";
+import { Node } from "./node";
+import { NodeExecutionStatus } from "../../../../convex/schema/nodes";
+import { api } from "../../../../convex/_generated/api";
 
 interface WorkflowCanvasProps {
   workflowId: string;
@@ -13,8 +13,8 @@ interface WorkflowCanvasProps {
 }
 
 export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: WorkflowCanvasProps) {
-  const nodes = useQuery(api.nodes.getNodesByWorkflow, { workflowId });
-  const edges = useQuery(api.nodes.getEdgesByWorkflow, { workflowId });
+  const nodes = useQuery(workflowId ? api.nodes.getNodesByWorkflow : (undefined as unknown as any), workflowId ? { workflowId } : (undefined as unknown as any));
+  const edges = useQuery(workflowId ? api.nodes.getEdgesByWorkflow : (undefined as unknown as any), workflowId ? { workflowId } : (undefined as unknown as any));
   const updateNode = useMutation(api.nodes.updateNode);
 
   const [draggingNodes, setDraggingNodes] = React.useState<Record<string, { x: number; y: number }>>({});

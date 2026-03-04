@@ -2,10 +2,10 @@
 
 import { FormEvent, useState } from "react";
 import { useAction, useMutation } from "convex/react";
-import { api } from "../convex/_generated/api";
-import { UINode, WorkflowGraph } from "../convex/schema/nodes";
 import { Button, Input } from "ui-lab-components";
 import { FaPencil } from "react-icons/fa6";
+import { api } from "../../../../convex/_generated/api";
+import { UINode, WorkflowGraph } from "../../../../convex/schema/nodes";
 
 interface PromptInputProps {
   workflowId: string;
@@ -23,7 +23,7 @@ export function PromptInput({ workflowId }: PromptInputProps) {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim()) return;
+    if (!prompt.trim() || !workflowId) return;
 
     setIsLoading(true);
     try {

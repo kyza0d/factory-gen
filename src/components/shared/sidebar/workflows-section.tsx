@@ -5,7 +5,7 @@ import { useSelectedLayoutSegment, usePathname, useRouter } from 'next/navigatio
 import { FaRoute, FaPlus } from 'react-icons/fa6';
 import { Expand, Button } from 'ui-lab-components';
 import { useQuery, useMutation } from 'convex/react';
-import { api } from '../../convex/_generated/api';
+import { api } from "../../../../convex/_generated/api"
 
 interface WorkflowsSectionProps {
   isCollapsed: boolean;
@@ -20,18 +20,15 @@ export const WorkflowsSection = React.memo(function WorkflowsSection({ isCollaps
   const workflows = useQuery(api.nodes.getWorkflows);
   const createEmptyWorkflow = useMutation(api.nodes.createEmptyWorkflow);
 
-  // Expansion state: defaults to true if workflows segment is active, but can be toggled
   const [isManualExpanded, setIsManualExpanded] = useState<boolean | null>(null);
   const isExpanded = isManualExpanded ?? isWorkflowsActive;
 
   const toggleExpand = useCallback((e: React.MouseEvent) => {
-    // We let the Link navigate if it's a new navigation, but we toggle the expansion manually if needed
     setIsManualExpanded(!isExpanded);
   }, [isExpanded]);
 
-  const handleCreateWorkflow = useCallback(async (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
+  const handleCreateWorkflow = useCallback(async () => {
+
     try {
       const id = await createEmptyWorkflow({ name: "Untitled Workflow" });
       router.push(`/workflows/${id}`);

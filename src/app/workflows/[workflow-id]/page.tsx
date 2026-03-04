@@ -1,19 +1,23 @@
 "use client";
 
-import { PromptInput } from "../../../components/PromptInput";
-import { WorkflowCanvas } from "../../../components/WorkflowCanvas";
+import { PromptInput } from "../components/prompt-input";
+import { WorkflowCanvas } from "../components/workflow-canvas";
 import { useAction, useQuery } from "convex/react";
-import { api } from "../../../convex/_generated/api";
-import { useState, use } from "react";
-import { ExecutionEvent } from "../../../convex/ai";
-import { NodeExecutionStatus } from "../../../convex/schema/nodes";
+import { useState, useEffect } from "react";
+// import { ExecutionEvent } from "../../convex/ai";
+// import { NodeExecutionStatus } from "../../convex/schema/nodes";
 import { Group, Select, Divider, Tooltip, Badge, Input } from "ui-lab-components";
 import { FaPlay, FaSpinner, FaStop, FaTerminal, FaGear, FaCheck } from "react-icons/fa6";
 import { useParams } from "next/navigation";
+import { api } from "../../../../convex/_generated/api";
+import { NodeExecutionStatus } from "../../../../convex/schema/nodes";
+import { ExecutionEvent } from "../../../../convex/ai";
 
 export default function WorkflowPage() {
   const params = useParams();
-  const workflowId = params.workflowId as string;
+  const workflowId = params["workflow-id"] as string;
+
+  const workflow = useQuery(api.nodes.getWorkflow, { workflowId });
 
   const executeWorkflow = useAction(api.ai.executeWorkflow);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -25,6 +29,12 @@ export default function WorkflowPage() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [mode, setMode] = useState<string | null>("run");
   const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
+
+  useEffect(() => {
+    if (workflow) {
+      setWorkflowName(workflow.name);
+    }
+  }, [workflow]);
 
   const handleExecuteWorkflow = async () => {
     setIsWorkflowRunning(true);
@@ -103,7 +113,7 @@ export default function WorkflowPage() {
           </Badge>
         )}
         <Divider className="-my-1" orientation="vertical" />
-        
+
         <Group orientation="horizontal" spacing="none" className="shrink-0 rounded-full">
           <Group.Select className="" selectedKey={mode} onSelectionChange={handleModeChange} isDisabled={isWorkflowRunning}>
             <Group.Button

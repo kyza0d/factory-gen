@@ -4,8 +4,8 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "ui-lab-components/styles.css"
 import "./globals.css";
 
-import ConvexClientProvider from "../components/ConvexClientProvider";
-import { Sidebar } from "../components/Sidebar";
+import ConvexClientProvider from "../components/shared/convex-client-provider";
+import { Sidebar } from "../components/shared/sidebar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
