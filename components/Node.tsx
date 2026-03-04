@@ -60,7 +60,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
       case "danger":
         return "border-danger-500";
       case "pending":
-        return "border-info-500 animate-pulse"; // Using info for pending, and animate-pulse for visual feedback
+        return "border-accent-500 animate-pulse"; // Using info for pending, and animate-pulse for visual feedback
       default:
         return "border-background-600";
     }

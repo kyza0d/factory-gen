@@ -5,7 +5,6 @@ import {
   FaGear,
   FaRightFromBracket,
   FaCircleQuestion,
-  FaRoute,
   FaShapes,
   FaBook
 } from 'react-icons/fa6';
@@ -14,6 +13,7 @@ import { PanelLeft } from 'lucide-react';
 
 import { NavItem } from './NavItem';
 import { WorkflowsSection } from './WorkflowsSection';
+import Logo from '../Logo';
 
 const MAIN_NAV_ITEMS = [
   { id: 'nodes', label: 'Nodes', icon: FaShapes, href: '/nodes' },
@@ -46,14 +46,15 @@ export function SidebarContent() {
       `}
     >
       {/* Sidebar Header */}
-      <div className="h-20 flex items-center justify-between px-2 shrink-0">
+      <div className="flex items-center justify-between pt-2 px-2 shrink-0">
         {!isCollapsed && (
-          <div className="flex items-center gap-4 overflow-hidden whitespace-nowrap animate-in fade-in duration-300">
-            <div className="w-10 h-10 bg-background-800 flex items-center justify-center shrink-0 rounded-sm">
-              <FaRoute size={16} />
+          <div className="flex items-center gap-2 overflow-hidden whitespace-nowrap animate-in fade-in duration-300">
+            <div className="w-10 h-10 text-accent-500 bg-accent-500/20 flex items-center justify-center shrink-0 rounded-sm">
+              <Logo className="w-6 h-6" />
             </div>
             <div className="flex flex-col">
-              <span className='text-xs font-bold text-foreground-50'>FactoryGen</span>
+              <span className='text-xs font-bold -mb-1 text-foreground-50'>Factory</span>
+              <span className='text-[10px] tracking-wider font-black text-accent-500'>GEN</span>
             </div>
           </div>
         )}
@@ -71,7 +72,7 @@ export function SidebarContent() {
         </button>
       </div>
 
-      <Divider />
+      <Divider size="sm" />
 
       {/* Navigation Items */}
       <nav className="px-2 flex flex-col items-start overflow-y-auto overflow-x-hidden custom-scrollbar">
