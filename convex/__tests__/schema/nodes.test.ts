@@ -60,7 +60,10 @@ describe("UI Node Schemas", () => {
           options: null,
         },
       ],
+      agentDefinitionId: null,
       uiComponent: "TextSummarizerNode",
+      position: { x: 0, y: 0 },
+      modules: [],
     };
     const result = UINodeSchema.safeParse(validNode);
     expect(result.success).toBe(true);
