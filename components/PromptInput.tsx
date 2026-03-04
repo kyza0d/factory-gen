@@ -7,7 +7,11 @@ import { UINode, WorkflowGraph } from "../convex/schema/nodes";
 import { Button, Input } from "ui-lab-components";
 import { FaPencil } from "react-icons/fa6";
 
-export function PromptInput() {
+interface PromptInputProps {
+  workflowId: string;
+}
+
+export function PromptInput({ workflowId }: PromptInputProps) {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -23,23 +27,18 @@ export function PromptInput() {
 
     setIsLoading(true);
     try {
-      if (prompt.toLowerCase().includes("workflow") ||
+      if (
+        prompt.toLowerCase().includes("workflow") ||
         prompt.toLowerCase().includes("process") ||
         prompt.toLowerCase().includes("graph") ||
         prompt.toLowerCase().includes("sequence") ||
-        prompt.toLowerCase().includes("pipeline")) {
-        const workflow: WorkflowGraph = (await generateWorkflow({ prompt }));
-        // For the sandbox, we'll use 'default' as the workflowId so it shows up on the canvas
-        const sandboxWorkflow: WorkflowGraph = {
-          ...workflow,
-          id: "default",
-          nodes: workflow.nodes.map((n) => ({ ...n, workflowId: "default" })),
-          edges: workflow.edges.map((e) => ({ ...e, workflowId: "default" })),
-        };
-        await createWorkflow({ workflow: sandboxWorkflow });
+        prompt.toLowerCase().includes("pipeline")
+      ) {
+        const workflow: WorkflowGraph = await generateWorkflow({ prompt, workflowId });
+        await createWorkflow({ workflow: { ...workflow, id: workflowId } });
       } else {
-        const generatedNode = (await generateNode({ prompt })) as UINode;
-        await createNode({ ...generatedNode, workflowId: "default" });
+        const generatedNode = (await generateNode({ prompt, workflowId })) as UINode;
+        await createNode({ ...generatedNode, workflowId });
       }
       setPrompt("");
     } catch (error) {

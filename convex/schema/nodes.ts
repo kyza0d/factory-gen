@@ -29,18 +29,18 @@ export const UINodeSchema = z.object({
   inputs: z.array(IOParamSchema).describe("List of inputs the node accepts (can be empty)."),
   outputs: z.array(IOParamSchema).describe("List of outputs the node produces (can be empty)."),
   parameters: z.array(IOParamSchema).describe("Configurable parameters for the node (can be empty)."),
-  agentDefinitionId: z.string().nullable().describe("Reference to an agent definition (or null)."),
-  uiComponent: z.string().nullable().describe("Name of a specific React component to render."),
+  agentDefinitionId: z.string().nullable().optional().describe("Reference to an agent definition (or null)."),
+  uiComponent: z.string().nullable().optional().describe("Name of a specific React component to render."),
   position: z.object({
     x: z.number(),
     y: z.number(),
-  }).describe("Coordinates for positioning the node on the canvas."),
+  }).optional().describe("Coordinates for positioning the node on the canvas."),
   modules: z.array(z.object({
     id: z.string().describe("Unique identifier for the module (UUID)."),
     type: z.string().describe("Type of the module (e.g., 'text', 'image')."),
     label: z.string().describe("Display label for the module."),
     value: z.string().nullable().describe("Actual content or value of the module (as string or null)."),
-  })).nullable().describe("List of modules within the node (can be empty)."),
+  })).nullable().optional().describe("List of modules within the node (can be empty)."),
 });
 
 /**

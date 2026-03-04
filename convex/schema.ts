@@ -25,6 +25,13 @@ export default defineSchema({
     id: v.string(), // External UUID
     name: v.string(),
     description: v.optional(v.string()),
+    fileId: v.optional(v.id("files")), // New field to associate with a file
+  }).index("by_fileId", ["fileId"]),
+
+  files: defineTable({
+    name: v.string(),
+    type: v.string(), // e.g., "workflow"
+    description: v.optional(v.string()),
   }),
 
   edges: defineTable({

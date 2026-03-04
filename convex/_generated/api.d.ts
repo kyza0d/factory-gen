@@ -9,6 +9,7 @@
  */
 
 import type * as ai from "../ai.js";
+import type * as files from "../files.js";
 import type * as nodes from "../nodes.js";
 import type * as schema_nodes from "../schema/nodes.js";
 
@@ -20,6 +21,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   ai: typeof ai;
+  files: typeof files;
   nodes: typeof nodes;
   "schema/nodes": typeof schema_nodes;
 }>;

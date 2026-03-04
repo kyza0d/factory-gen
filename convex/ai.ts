@@ -57,7 +57,7 @@ export const generateNode = action({
 /**
  * Generates a complete workflow graph based on a user description.
  */
-export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: string }): Promise<WorkflowGraph> => {
+export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: string; workflowId?: string }): Promise<WorkflowGraph> => {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
     throw new Error("OPENAI_API_KEY is not configured in Convex environment variables.");
@@ -93,6 +93,11 @@ export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: s
       Ensure each node has a unique UUID.`,
     });
 
+    // If a workflowId was provided, ensure the generated workflow uses it.
+    if (args.workflowId) {
+      output.id = args.workflowId;
+    }
+
     return output;
   } catch (error) {
     console.error("Error generating workflow:", error);
@@ -103,6 +108,7 @@ export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: s
 export const generateWorkflow = action({
   args: {
     prompt: v.string(),
+    workflowId: v.optional(v.string()),
   },
   handler: generateWorkflowHandler,
 });

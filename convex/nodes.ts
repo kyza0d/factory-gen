@@ -1,4 +1,4 @@
-import { mutation, query } from "./_generated/server";
+import { mutation, query, MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 
 /**
@@ -54,6 +54,16 @@ export const getNode = query({
 });
 
 /**
+ * Retrieves all workflows.
+ */
+export const getWorkflows = query({
+  args: {},
+  handler: async (ctx) => {
+    return await ctx.db.query("workflows").collect();
+  },
+});
+
+/**
  * Retrieves all nodes belonging to a specific workflow.
  */
 export const getNodesByWorkflow = query({
@@ -80,6 +90,93 @@ export const getEdgesByWorkflow = query({
 });
 
 /**
+ * Handler for creating a complete workflow.
+ * Extracted for testing.
+ */
+export const createWorkflowHandler = async (ctx: MutationCtx, args: {
+  workflow: {
+    id: string;
+    name: string;
+    description?: string;
+    nodes: any[];
+    edges: any[];
+    fileId?: string;
+  }
+}) => {
+  const { workflow } = args;
+
+  // 1. Cleanup: Delete existing workflow data for the same ID
+  const existingWorkflow = await ctx.db
+    .query("workflows")
+    .filter((q) => q.eq(q.field("id"), workflow.id))
+    .first();
+  if (existingWorkflow) {
+    await ctx.db.delete(existingWorkflow._id);
+  }
+
+  const existingNodes = await ctx.db
+    .query("nodes")
+    .withIndex("by_workflowId", (q) => q.eq("workflowId", workflow.id))
+    .collect();
+  for (const node of existingNodes) {
+    await ctx.db.delete(node._id);
+  }
+
+  const existingEdges = await ctx.db
+    .query("edges")
+    .withIndex("by_workflowId", (q) => q.eq("workflowId", workflow.id))
+    .collect();
+  for (const edge of existingEdges) {
+    await ctx.db.delete(edge._id);
+  }
+
+  // 2. Insert the workflow itself
+  await ctx.db.insert("workflows", {
+    id: workflow.id,
+    name: workflow.name,
+    description: workflow.description,
+    fileId: workflow.fileId as any,
+  });
+
+  // 3. Insert all nodes
+  for (const node of workflow.nodes) {
+    await ctx.db.insert("nodes", {
+      ...node,
+      workflowId: workflow.id,
+    });
+  }
+
+  // 4. Insert all edges
+  for (const edge of workflow.edges) {
+    await ctx.db.insert("edges", {
+      ...edge,
+      workflowId: workflow.id,
+    });
+  }
+
+  return workflow.id;
+};
+
+/**
+ * Creates a new empty workflow.
+ */
+export const createEmptyWorkflow = mutation({
+  args: {
+    name: v.string(),
+    fileId: v.optional(v.id("files")),
+  },
+  handler: async (ctx, args) => {
+    const id = crypto.randomUUID();
+    await ctx.db.insert("workflows", {
+      id,
+      name: args.name,
+      fileId: args.fileId,
+    });
+    return id;
+  },
+});
+
+/**
  * Stores a complete workflow (nodes and edges) in the database.
  */
 export const createWorkflow = mutation({
@@ -90,62 +187,10 @@ export const createWorkflow = mutation({
       description: v.optional(v.string()),
       nodes: v.array(v.any()),
       edges: v.array(v.any()),
+      fileId: v.optional(v.string()), // Optional fileId association
     }),
   },
-  handler: async (ctx, args) => {
-    const { workflow } = args;
-
-    // 1. Cleanup: Delete existing workflow data for the same ID to prevent accumulation
-    // and stale execution states (e.g., green "success" borders from previous runs).
-    const existingWorkflow = await ctx.db
-      .query("workflows")
-      .filter((q) => q.eq(q.field("id"), workflow.id))
-      .first();
-    if (existingWorkflow) {
-      await ctx.db.delete(existingWorkflow._id);
-    }
-
-    const existingNodes = await ctx.db
-      .query("nodes")
-      .withIndex("by_workflowId", (q) => q.eq("workflowId", workflow.id))
-      .collect();
-    for (const node of existingNodes) {
-      await ctx.db.delete(node._id);
-    }
-
-    const existingEdges = await ctx.db
-      .query("edges")
-      .withIndex("by_workflowId", (q) => q.eq("workflowId", workflow.id))
-      .collect();
-    for (const edge of existingEdges) {
-      await ctx.db.delete(edge._id);
-    }
-
-    // 2. Insert the workflow itself
-    await ctx.db.insert("workflows", {
-      id: workflow.id,
-      name: workflow.name,
-      description: workflow.description,
-    });
-
-    // 3. Insert all nodes
-    for (const node of workflow.nodes) {
-      await ctx.db.insert("nodes", {
-        ...node,
-        workflowId: workflow.id,
-      });
-    }
-
-    // 4. Insert all edges
-    for (const edge of workflow.edges) {
-      await ctx.db.insert("edges", {
-        ...edge,
-        workflowId: workflow.id,
-      });
-    }
-
-    return workflow.id;
-  },
+  handler: createWorkflowHandler,
 });
 
 /**
