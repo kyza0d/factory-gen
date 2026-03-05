@@ -99,8 +99,8 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
   }, [updateNode]);
 
   return (
-    <div className="absolute inset-0 overflow-auto">
-      <div className="min-w-[2000px] min-h-[2000px] relative">
+    <div className="absolute inset-0">
+      <div className="relative ">
         {nodes?.map((node: UINode) => (
           <Node
             key={node.id}

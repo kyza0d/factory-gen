@@ -95,7 +95,7 @@ export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: s
       ${nodeDefinitionsPrompt}
 
       Layout nodes logically:
-      - Assign 'position' coordinates {x, y} for each node.
+      - Assign 'position' coordinates {x, y} for each node, snapped to a 25x25 grid.
       - Start 'Input' at {x: 50, y: 150}.
       - Space nodes horizontally by ~300 pixels (e.g., 350, 650, etc.).
       - Space nodes vertically if there are branches.
