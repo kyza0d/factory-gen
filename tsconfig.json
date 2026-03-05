@@ -19,7 +19,8 @@
       }
     ],
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@convex/*": ["./convex/*"]
     },
     "types": ["node", "react", "react-dom"]
   },
@@ -27,6 +28,7 @@
     "next-env.d.ts",
     "src/**/*.ts",
     "src/**/*.tsx",
+    "convex/**/*.ts",
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "src/**/*.mts"

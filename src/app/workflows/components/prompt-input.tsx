@@ -3,7 +3,7 @@
 import { FormEvent, useState } from "react";
 import { useAction, useMutation } from "convex/react";
 import { Button, Input } from "ui-lab-components";
-import { FaPencil } from "react-icons/fa6";
+import { FaArrowTurnUp, FaPencil } from "react-icons/fa6";
 import { api } from "../../../../convex/_generated/api";
 import { UINode, WorkflowGraph } from "../../../../convex/schema/nodes";
 
@@ -68,10 +68,12 @@ export function PromptInput({ workflowId }: PromptInputProps) {
             <Button
               type="submit"
               variant="secondary"
-              className="rounded-full z-20 px-6 py-1 my-1 mr-1"
+              size="sm"
+              className="rounded-full z-20 h-10 px-4 pt-2 my-auto mr-2"
+              icon={{ right: <FaArrowTurnUp className="rotate-90 w-12" /> }}
               disabled={isLoading}
             >
-              {isLoading ? "Generating..." : "Send"}
+              {/* {isLoading ? "Generating..." : "Send"} */}
             </Button>
           </div>
         </form>

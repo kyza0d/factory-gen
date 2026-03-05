@@ -26,9 +26,9 @@
 }
 
 @theme {
-  --font-sans: "Karla", system-ui, sans-serif;
+  --font-sans: "Geist", system-ui, sans-serif;
   --font-mono: "Ioskeley Mono", monospace;
-  --text-xs: 0.900rem;
+  --text-xs: 0.830rem;
   --text-sm: 1.000rem;
   --text-md: 1.000rem;
   --text-base: 1.000rem;

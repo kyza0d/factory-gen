@@ -3,8 +3,8 @@
 import React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Node } from "./node";
-import { NodeExecutionStatus } from "../../../../convex/schema/nodes";
-import { api } from "../../../../convex/_generated/api";
+import { UINode, IOParam, NodeExecutionStatus } from "@convex/schema/nodes";
+import { api } from "@convex/_generated/api";
 
 interface WorkflowCanvasProps {
   workflowId: string;
@@ -36,10 +36,10 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
   ) => {
     if (!nodes) return;
 
-    const nodeToUpdate = nodes.find((node) => node.id === nodeId);
+    const nodeToUpdate = nodes.find((node: UINode) => node.id === nodeId);
     if (!nodeToUpdate) return;
 
-    const updatedModules = nodeToUpdate.modules?.map((module) =>
+    const updatedModules = nodeToUpdate.modules?.map((module: { id: string; type: string; label: string; value: string | null; }) =>
       module.id === moduleId ? { ...module, value: newValue } : module
     );
 
@@ -60,10 +60,10 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
   ) => {
     if (!nodes) return;
 
-    const nodeToUpdate = nodes.find((node) => node.id === nodeId);
+    const nodeToUpdate = nodes.find((node: UINode) => node.id === nodeId);
     if (!nodeToUpdate) return;
 
-    const updatedParameters = nodeToUpdate.parameters?.map((param) =>
+    const updatedParameters = nodeToUpdate.parameters?.map((param: IOParam) =>
       param.id === parameterId ? { ...param, defaultValue: newValue as string } : param
     );
 
@@ -101,9 +101,9 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
   return (
     <div className="absolute inset-0 overflow-auto">
       <div className="min-w-[2000px] min-h-[2000px] relative">
-        {nodes?.map((node) => (
+        {nodes?.map((node: UINode) => (
           <Node
-            key={node._id}
+            key={node.id}
             node={node as any}
             onModuleValueChange={handleModuleValueChange}
             onParameterValueChange={handleParameterValueChange}
@@ -117,9 +117,9 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
         {/* Edge Visualization */}
         {edges && nodes && (
           <svg className="absolute inset-0 pointer-events-none w-full h-full overflow-visible">
-            {edges.map((edge) => {
-              const sourceNode = nodes.find((n) => n.id === edge.source);
-              const targetNode = nodes.find((n) => n.id === edge.target);
+            {edges.map((edge: { id: string; source: string; sourceHandle: string | null; target: string; targetHandle: string | null; }) => {
+              const sourceNode = nodes.find((n: UINode) => n.id === edge.source);
+              const targetNode = nodes.find((n: UINode) => n.id === edge.target);
               if (!sourceNode || !targetNode) return null;
 
               // Derive edge status from connected nodes using ephemeral nodeStatuses
@@ -149,8 +149,8 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
               const sourceWidth = sourceNode.type === "Output" ? 320 : 256;
 
               // Calculate port indices
-              const sourcePortIndex = sourceNode.outputs?.findIndex(o => o.id === edge.sourceHandle) ?? 0;
-              const targetPortIndex = targetNode.inputs?.findIndex(i => i.id === edge.targetHandle) ?? 0;
+              const sourcePortIndex = sourceNode.outputs?.findIndex((o: IOParam) => o.id === edge.sourceHandle) ?? 0;
+              const targetPortIndex = targetNode.inputs?.findIndex((i: IOParam) => i.id === edge.targetHandle) ?? 0;
 
               // --- Recalculated Offsets based on Node.tsx layout ---
               const headerHeight = 16; // Accounting for Badge height, padding, and 2px borders

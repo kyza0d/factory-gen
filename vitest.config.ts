@@ -1,6 +1,12 @@
 import { defineConfig } from 'vitest/config';
+import path from 'path';
 
 export default defineConfig({
+  resolve: {
+    alias: {
+      '@convex': path.resolve(__dirname, './convex'),
+    },
+  },
   test: {
     globals: true,
     environment: 'jsdom', // Default environment for tests

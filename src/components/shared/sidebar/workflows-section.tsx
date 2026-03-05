@@ -1,41 +1,45 @@
 "use client"
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
-import { useSelectedLayoutSegment, usePathname, useRouter } from 'next/navigation';
 import { FaRoute, FaPlus } from 'react-icons/fa6';
 import { Expand, Button } from 'ui-lab-components';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from "../../../../convex/_generated/api"
+import { useSidebar, useApp } from '../app-context';
+import { useAppNavigation } from '../app-navigation';
 
-interface WorkflowsSectionProps {
-  isCollapsed: boolean;
-}
-
-export const WorkflowsSection = React.memo(function WorkflowsSection({ isCollapsed }: WorkflowsSectionProps) {
-  const segment = useSelectedLayoutSegment();
-  const isWorkflowsActive = segment === 'workflows';
-  const pathname = usePathname();
-  const router = useRouter();
-
-  const workflows = useQuery(api.nodes.getWorkflows);
+export const WorkflowsSection = React.memo(function WorkflowsSection() {
+  const { isCollapsed } = useSidebar();
+  const { activeSection } = useApp();
+  const { navigateToWorkflows, navigateToWorkflow } = useAppNavigation();
+  const isWorkflowsActive = activeSection === 'workflows';
+  
   const createEmptyWorkflow = useMutation(api.nodes.createEmptyWorkflow);
 
   const [isManualExpanded, setIsManualExpanded] = useState<boolean | null>(null);
   const isExpanded = isManualExpanded ?? isWorkflowsActive;
 
   const toggleExpand = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
     setIsManualExpanded(!isExpanded);
   }, [isExpanded]);
 
-  const handleCreateWorkflow = useCallback(async () => {
+  const handleWorkflowsClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    navigateToWorkflows();
+    setIsManualExpanded(true);
+  }, [navigateToWorkflows]);
 
+  const handleCreateWorkflow = useCallback(async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
     try {
       const id = await createEmptyWorkflow({ name: "Untitled Workflow" });
-      router.push(`/workflows/${id}`);
+      navigateToWorkflow(id);
     } catch (error) {
       console.error("Failed to create workflow:", error);
     }
-  }, [createEmptyWorkflow, router]);
+  }, [createEmptyWorkflow, navigateToWorkflow]);
 
   return (
     <div className="w-full flex items-center mb-2">
@@ -54,7 +58,7 @@ export const WorkflowsSection = React.memo(function WorkflowsSection({ isCollaps
                 : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
               `}
             title={isCollapsed ? "Workflows" : undefined}
-            onClick={toggleExpand}
+            onClick={handleWorkflowsClick}
           >
             <FaRoute size={17} className="shrink-0 transition-transform duration-200" />
             {!isCollapsed && (
@@ -73,37 +77,75 @@ export const WorkflowsSection = React.memo(function WorkflowsSection({ isCollaps
               >
                 <FaPlus size={13} />
               </Button>
-              <Expand.Icon className='w-7 h-7 p-0  hover:text-foreground-50 hover:bg-background-700' />
+              <Expand.Icon 
+                onClick={toggleExpand}
+                className='w-7 h-7 p-0  hover:text-foreground-50 hover:bg-background-700' 
+              />
             </div>
           )}
         </div>
         <Expand.Content>
-          {!isCollapsed && (
-            <div className="flex flex-col gap-0.5 pl-3 pr-2 mt-1">
-              {workflows?.map((workflow) => {
-                const href = `/workflows/${workflow.id}`;
-                const isSubActive = pathname === href;
-                return (
-                  <Link
-                    key={workflow.id}
-                    href={href}
-                    className={`
-                      py-2 px-2 text-xs rounded-sm transition-colors block
-                      ${isSubActive
-                        ? 'text-foreground-100 bg-background-800'
-                        : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
-                    `}
-                  >
-                    {workflow.name}
-                  </Link>
-                );
-              })}
-              {workflows === undefined && <div className="p-2 text-xs text-foreground-500">Loading...</div>}
-              {workflows?.length === 0 && <div className="p-2 text-xs text-foreground-500 italic">No workflows</div>}
-            </div>
-          )}
+          <div className="flex flex-col gap-0.5 pl-3 pr-2 mt-1">
+            <WorkflowsList />
+          </div>
         </Expand.Content>
       </Expand>
     </div>
+  );
+});
+
+const WorkflowNavItem = React.memo(function WorkflowNavItem({ 
+  id, 
+  name,
+}: { 
+  id: string; 
+  name: string; 
+}) {
+  const { activeWorkflowId } = useApp();
+  const { navigateToWorkflow } = useAppNavigation();
+  const isActive = activeWorkflowId === id;
+  
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    navigateToWorkflow(id);
+  }, [id, navigateToWorkflow]);
+
+  return (
+    <Link
+      href={`/workflows/${id}`}
+      onClick={handleClick}
+      className={`
+        py-2 px-2 text-xs rounded-sm transition-colors block
+        ${isActive
+          ? 'text-foreground-100 bg-background-800'
+          : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
+      `}
+    >
+      {name}
+    </Link>
+  );
+});
+
+const WorkflowsList = React.memo(function WorkflowsList() {
+  const workflows = useQuery(api.nodes.getWorkflowsWithStatus);
+
+  if (workflows === undefined) {
+    return <div className="p-2 text-xs text-foreground-500">Loading...</div>;
+  }
+
+  if (workflows.length === 0) {
+    return <div className="p-2 text-xs text-foreground-500 italic">No workflows</div>;
+  }
+
+  return (
+    <>
+      {workflows.map((workflow) => (
+        <WorkflowNavItem
+          key={workflow.id}
+          id={workflow.id}
+          name={workflow.name}
+        />
+      ))}
+    </>
   );
 });

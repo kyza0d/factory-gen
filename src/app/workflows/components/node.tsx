@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import Draggable from "react-draggable";
-import { UINode, IOParam, NodeExecutionStatus } from "../../convex/schema/nodes";
+import { UINode, IOParam, NodeExecutionStatus } from "@convex/schema/nodes";
 import { DebouncedInput } from "../../../components/ui/debounced-input";
 import { Badge, Input, Select } from "ui-lab-components";
 import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaRegTrashCan, FaRegImage, FaQuestion } from "react-icons/fa6";
@@ -68,7 +68,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
 
   useEffect(() => {
     if (node.type === "Output" && result !== undefined) {
-      const textModule = node.modules?.find((m) => m.type === "text");
+      const textModule = node.modules?.find((m: { id: string; type: string; label: string; value: string | null; }) => m.type === "text");
       if (textModule && textModule.value !== String(result)) {
         onModuleValueChange(node.id, textModule.id, String(result));
       }
@@ -99,12 +99,12 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
           {((node.inputs && node.inputs.length > 0) || (node.outputs && node.outputs.length > 0)) && (
             <div className="grid grid-cols-2">
               <div className="flex flex-col">
-                {node.inputs?.map((input) => (
+                {node.inputs?.map((input: IOParam) => (
                   <Port key={input.id} port={input} type="input" />
                 ))}
               </div>
               <div className="flex flex-col">
-                {node.outputs?.map((output) => (
+                {node.outputs?.map((output: IOParam) => (
                   <Port key={output.id} port={output} type="output" />
                 ))}
               </div>
@@ -116,7 +116,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
           {node.parameters && node.parameters.length > 0 && (
             <div className="p-3">
               <p className="mb-1 text-xs font-semibold">Parameters</p>
-              {node.parameters.map((param) => (
+              {node.parameters.map((param: IOParam) => (
                 <div key={param.id} className="mb-2">
                   <label className="text-xs capitalize font-semibold block">
                     {param.name}
@@ -138,7 +138,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                         <Select.Value placeholder="Select an option" className="rounded-xl!" />
                       </Select.Trigger>
                       <Select.Content className="rounded-sm">
-                        {param.options.map(opt => (
+                        {param.options.map((opt: string) => (
                           <Select.Item className="rounded-xs" key={opt} value={opt}>{opt}</Select.Item>
                         ))}
                       </Select.Content>
@@ -151,7 +151,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
           {node.modules && node.modules.length > 0 && (
             <div className="p-3">
               <p className="text-xs font-semibold mb-1">Modules</p>
-              {node.modules.map((module) => (
+              {node.modules.map((module: { id: string; type: string; label: string; value: string | null; }) => (
                 <div key={module.id} className="mb-2">
                   <label className="block mt-6 font-semibold text-xs">
                     {module.label}
