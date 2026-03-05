@@ -1,15 +1,25 @@
 {
-  "name": "factorygen",
-  "version": "0.1.0",
-  "private": true,
+  "name": "nextauri",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
-    "lint": "eslint"
+    "dev": "tauri dev",
+    "tauri": "tauri",
+    "lint": "next lint src-next",
+    "next": "next src-next",
+    "clippy": "cargo clippy --manifest-path ./src-tauri/Cargo.toml",
+    "next-build": "next build src-next"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.37",
+    "@tauri-apps/api": "^2.10.1",
+    "@tauri-apps/plugin-clipboard-manager": "^2.3.2",
+    "@tauri-apps/plugin-dialog": "^2.6.0",
+    "@tauri-apps/plugin-fs": "^2.4.5",
+    "@tauri-apps/plugin-global-shortcut": "^2.3.1",
+    "@tauri-apps/plugin-http": "^2.5.7",
+    "@tauri-apps/plugin-notification": "^2.3.3",
+    "@tauri-apps/plugin-os": "^2.3.2",
+    "@tauri-apps/plugin-process": "^2.3.1",
+    "@tauri-apps/plugin-shell": "^2.3.5",
     "ai": "^6.0.105",
     "convex": "^1.32.0",
     "lucide-react": "^0.576.0",
@@ -25,6 +35,7 @@
   "devDependencies": {
     "@playwright/test": "^1.58.2",
     "@tailwindcss/postcss": "^4",
+    "@tauri-apps/cli": "^2.10.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
