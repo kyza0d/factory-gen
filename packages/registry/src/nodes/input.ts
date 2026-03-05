@@ -16,16 +16,7 @@ export const InputMetadata: NodeMetadata = {
       options: null,
     },
   ],
-  parameters: [
-    {
-      id: "param-1",
-      name: "value",
-      type: "string",
-      description: "Default value if no input is provided",
-      defaultValue: "Default User Input",
-      options: null,
-    },
-  ],
+  parameters: [],
   modules: [
     {
       type: "text",

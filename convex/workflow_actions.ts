@@ -275,8 +275,6 @@ export const executeWorkflowHandler = async (
 };
 
 export const executeWorkflow = action({
-  args: {
-    workflowId: v.string(),
-  },
+  args: { workflowId: v.string() },
   handler: executeWorkflowHandler,
 });
