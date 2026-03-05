@@ -7,7 +7,7 @@ import {
   FaCircleQuestion,
   FaShapes,
   FaBook,
-  FaArrowLeft
+  FaChevronLeft
 } from 'react-icons/fa6';
 import { Divider, List } from 'ui-lab-components';
 import { PanelLeft } from 'lucide-react';
@@ -17,6 +17,7 @@ import { WorkflowsSection } from './workflows-section';
 import Logo from '../logo';
 import { useSidebar } from '../app-context';
 import { useAppNavigation } from '../app-navigation';
+import { FaChevronCircleLeft } from 'react-icons/fa';
 
 const MAIN_NAV_ITEMS = [
   { id: 'nodes', label: 'Nodes', icon: FaShapes },
@@ -49,21 +50,15 @@ export const SidebarContent = React.memo(function SidebarContent() {
     switch (activeItem) {
       case 'nodes':
         return (
-          <List aria-label="Nodes list" className="m-0 space-y-2">
-            <NavItem
-              item={{ id: 'node1', label: 'Node 1 (Input)', icon: FaShapes, href: '/nodes/node1' }}
-            />
-            <NavItem
-              item={{ id: 'node2', label: 'Node 2 (AI)', icon: FaShapes, href: '/nodes/node2' }}
-            />
-            <NavItem
-              item={{ id: 'node3', label: 'Node 3 (Output)', icon: FaShapes, href: '/nodes/node3' }}
-            />
+          <List aria-label="Nodes list" className="w-full m-0 space-y-2">
+            <NavItem item={{ id: 'node1', label: 'Node 1 (Input)', icon: FaShapes, href: '/nodes/node1' }} />
+            <NavItem item={{ id: 'node2', label: 'Node 2 (AI)', icon: FaShapes, href: '/nodes/node2' }} />
+            <NavItem item={{ id: 'node3', label: 'Node 3 (Output)', icon: FaShapes, href: '/nodes/node3' }} />
           </List>
         );
       case 'sources':
         return (
-          <List aria-label="Sources list" className="m-0 space-y-2">
+          <List aria-label="Sources list" className="w-full m-0 space-y-2">
             <NavItem
               item={{ id: 'source1', label: 'Source A', icon: FaBook, href: '/sources/source1' }}
             />
@@ -74,7 +69,7 @@ export const SidebarContent = React.memo(function SidebarContent() {
         );
       case 'agents':
         return (
-          <List aria-label="Agents list" className="m-0 space-y-2">
+          <List aria-label="Agents list" className="w-full m-0 space-y-2">
             <NavItem
               item={{ id: 'agent1', label: 'Agent X', icon: FaUser, href: '/agents/agent1' }}
             />
@@ -134,18 +129,23 @@ export const SidebarContent = React.memo(function SidebarContent() {
 
       {/* New Header for active items */}
       {!isCollapsed && activeItem && (
-        <div className="flex items-center gap-2 pt-2 px-4 shrink-0 text-foreground-50 font-bold text-sm">
-          <button
-            onClick={handleBackClick}
-            className={`
-              p-1 rounded-sm text-foreground-400 hover:bg-background-900 hover:text-foreground-50
-              focus:outline-none focus:ring-2 focus:ring-accent-500/30
-            `}
-            aria-label="Back"
-          >
-            <FaArrowLeft size={17} />
-          </button>
-          <span>{displayedHeader}</span>
+        <div>
+          <div className="flex justify-between border-background-700 items-center gap-2 pb-2 pr-4 pl-3 shrink-0 text-foreground-50 font-bold text-sm">
+            <button
+              onClick={handleBackClick}
+              className={`
+p-2 rounded-xs text-foreground-400 hover:bg-background-900 hover:text-foreground-50
+focus:outline-none focus:ring-2 focus:ring-accent-500/30
+`}
+              aria-label="Back"
+            >
+              <FaChevronLeft size={15} />
+            </button>
+          </div>
+          <Divider size="sm" className='mt-0' />
+          <div className='pl-6'>
+            <span className='text-xs font-semibold'>{displayedHeader}</span>
+          </div>
         </div>
       )}
 

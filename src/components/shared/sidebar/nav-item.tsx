@@ -20,12 +20,12 @@ export const NavItem = React.memo(function NavItem({ item, onSelect, currentActi
   const { isCollapsed } = useSidebar();
   const { activeSection } = useApp();
   const { navigateToWorkflows, navigateToDashboard, navigateToSettings, navigateToHelp } = useAppNavigation();
-  
+
   const isActive = useMemo(() => {
     if (currentActiveId) {
       return currentActiveId === item.id;
     }
-    
+
     // Check if the item's id matches the activeSection
     return activeSection === item.id;
   }, [activeSection, item.id, currentActiveId]);
