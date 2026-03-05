@@ -12,6 +12,25 @@ vi.mock("convex/react", async (importOriginal) => {
   };
 });
 
+// Mock next/navigation
+vi.mock("next/navigation", () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    prefetch: vi.fn(),
+    back: vi.fn(),
+  })),
+  usePathname: vi.fn(() => "/workflows"),
+}));
+
+// Mock useApp from app-context
+vi.mock("../../../components/shared/app-context", () => ({
+  useApp: vi.fn(() => ({
+    setActiveSection: vi.fn(),
+    setActiveWorkflowId: vi.fn(),
+  })),
+}));
+
 describe("Dashboard", () => {
   it("renders loading state", () => {
     // @ts-ignore
