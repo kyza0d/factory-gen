@@ -1,22 +1,7 @@
+import { NodeMetadata, NodeModule } from "@registry/types";
 import { ActionCtx } from "../_generated/server";
-import { IOParam } from "../schema/nodes";
 
-export interface NodeModule {
-  id?: string;
-  type: string;
-  label: string;
-  value?: string | null;
-}
-
-export interface NodeDefinition {
-  type: string;
-  label: string;
-  description?: string;
-  inputs?: IOParam[];
-  outputs?: IOParam[];
-  parameters?: IOParam[];
-  modules?: NodeModule[];
-  uiComponent?: string;
+export interface NodeDefinition extends NodeMetadata {
   execute: (
     ctx: ActionCtx,
     args: {

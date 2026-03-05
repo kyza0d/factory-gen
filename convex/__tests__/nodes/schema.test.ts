@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { UINodeSchema, IOParamSchema } from "../../schema/nodes";
+import { UINodeSchema, IOParamSchema } from "@registry/types";
 
 describe("UI Node Schemas", () => {
   it("validates a valid IOParam", () => {

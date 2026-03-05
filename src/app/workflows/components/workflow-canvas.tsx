@@ -3,7 +3,7 @@
 import React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Node } from "./node";
-import { UINode, IOParam, NodeExecutionStatus } from "@convex/schema/nodes";
+import { UINode, IOParam, NodeExecutionStatus } from "@registry/types";
 import { api } from "@convex/_generated/api";
 
 interface WorkflowCanvasProps {

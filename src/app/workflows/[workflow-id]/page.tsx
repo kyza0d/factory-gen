@@ -8,8 +8,8 @@ import { Group, Select, Divider, Tooltip, Badge, Input } from "ui-lab-components
 import { FaPlay, FaSpinner, FaStop, FaTerminal, FaGear, FaCheck } from "react-icons/fa6";
 import { useParams } from "next/navigation";
 import { api } from "@convex/_generated/api";
-import { NodeExecutionStatus } from "@convex/schema/nodes";
-import { ExecutionEvent } from "@convex/ai";
+import { NodeExecutionStatus } from "@registry/types";
+import { ExecutionEvent } from "@convex/workflow_actions";
 
 export default function WorkflowPage() {
   const params = useParams();
@@ -17,7 +17,7 @@ export default function WorkflowPage() {
 
   const workflow = useQuery(api.nodes.getWorkflow, { workflowId });
 
-  const executeWorkflow = useAction(api.ai.executeWorkflow);
+  const executeWorkflow = useAction(api.workflow_actions.executeWorkflow);
   const [isExecuting, setIsExecuting] = useState(false);
   const [nodeStatuses, setNodeStatuses] = useState<Record<string, NodeExecutionStatus>>({});
   const [workflowResult, setWorkflowResult] = useState<string | null>(null);
@@ -74,88 +74,91 @@ export default function WorkflowPage() {
   };
 
   return (
-    <div className="flex flex-col w-screen h-screen overflow-hidden">
-      <div className="absolute py-1 px-1 top-4 inset-x-0 mx-auto z-10 w-fit bg-background-900 border border-background-700 rounded-full flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          {isEditingName ? (
-            <Input
-              value={workflowName}
-              onChange={(e) => setWorkflowName(e.target.value)}
-              onBlur={() => setIsEditingName(false)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  setIsEditingName(false);
-                }
-              }}
-              className="rounded-md bg-background-800 border-none focus:ring-2 focus:ring-accent-500"
-              aria-label="Workflow Name"
-            />
-          ) : (
-            <span
-              className="cursor-pointer text-text-200 hover:text-text-100 text-xs font-medium px-2 py-1 rounded-md"
-              onClick={() => setIsEditingName(true)}
-            >
-              {workflowName}
-            </span>
+    <div className="flex px-2 pb-2 mt-14 flex-col flex-1 h-full min-h-0">
+      <div className="absolute py-1 mx-2 top-1 inset-x-0 z-10 flex justify-between items-center gap-2">
+        <div className="flex">
+          <div className="flex items-center gap-2">
+            {isEditingName ? (
+              <Input
+                value={workflowName}
+                onChange={(e) => setWorkflowName(e.target.value)}
+                onBlur={() => setIsEditingName(false)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    setIsEditingName(false);
+                  }
+                }}
+                className="rounded-md bg-background-800 border-none focus:ring-2 focus:ring-accent-500"
+                aria-label="Workflow Name"
+              />
+            ) : (
+              <span
+                className="cursor-pointer text-text-200 hover:text-text-100 text-xs font-medium px-2 py-1 rounded-md"
+                onClick={() => setIsEditingName(true)}
+              >
+                {workflowName}
+              </span>
+            )}
+          </div>
+
+          {!isWorkflowRunning && workflowResult && (
+            <Badge className="bg-success-500/20 text-success-500" size="sm" pill icon={<FaCheck size={12} />}>
+              Success
+            </Badge>
+          )}
+          {!isWorkflowRunning && workflowResult === null && !isExecuting && (
+            <Badge size="sm" pill>
+              Idle
+            </Badge>
           )}
         </div>
 
-        {!isWorkflowRunning && workflowResult && (
-          <Badge className="bg-success-500/20 text-success-500" size="sm" pill icon={<FaCheck size={12} />}>
-            Success
-          </Badge>
-        )}
-        {!isWorkflowRunning && workflowResult === null && !isExecuting && (
-          <Badge size="sm" pill>
-            Idle
-          </Badge>
-        )}
-        <Divider className="-my-1" orientation="vertical" />
+        <div className="flex gap-2">
+          <Group orientation="horizontal" spacing="none" className="shrink-0">
+            <Group.Select className="" selectedKey={mode} onSelectionChange={handleModeChange} isDisabled={isWorkflowRunning}>
+              <Group.Button
+                onPress={handleExecuteWorkflow}
+                isDisabled={isWorkflowRunning}
+                size="sm"
+                icon={{ left: isWorkflowRunning ? <FaSpinner className="animate-spin" size={12} /> : <FaPlay /> }}
+                className="pl-4 w-42 justify-start"
+              >
+                {isWorkflowRunning ? "Running..." : "Run Workflow"}
+              </Group.Button>
+              <Divider size="sm" />
+              <Select.Trigger />
+              <Select.Content>
+                <Select.List>
+                  <Select.Item value="run" textValue="Run Workflow">Run Workflow</Select.Item>
+                  <Select.Item value="schedule" textValue="Schedule Run">Schedule Run</Select.Item>
+                  <Select.Item value="debug" textValue="Debug Mode">Debug Mode</Select.Item>
+                  <Select.Item value="dry-run" textValue="Dry Run">Dry Run</Select.Item>
+                </Select.List>
+              </Select.Content>
+            </Group.Select>
+          </Group>
 
-        <Group orientation="horizontal" spacing="none" className="shrink-0 rounded-full">
-          <Group.Select className="" selectedKey={mode} onSelectionChange={handleModeChange} isDisabled={isWorkflowRunning}>
-            <Group.Button
-              onPress={handleExecuteWorkflow}
-              isDisabled={isWorkflowRunning}
-              size="sm"
-              icon={{ left: isWorkflowRunning ? <FaSpinner className="animate-spin" size={12} /> : <FaPlay /> }}
-              className="pl-4 w-42 justify-start"
-            >
-              {isWorkflowRunning ? "Running..." : "Run Workflow"}
-            </Group.Button>
-            <Divider size="sm" />
-            <Select.Trigger />
-            <Select.Content>
-              <Select.List>
-                <Select.Item value="run" textValue="Run Workflow">Run Workflow</Select.Item>
-                <Select.Item value="schedule" textValue="Schedule Run">Schedule Run</Select.Item>
-                <Select.Item value="debug" textValue="Debug Mode">Debug Mode</Select.Item>
-                <Select.Item value="dry-run" textValue="Dry Run">Dry Run</Select.Item>
-              </Select.List>
-            </Select.Content>
-          </Group.Select>
-        </Group>
-
-        <Group className="rounded-full" spacing="none">
-          <Tooltip content="Stop">
-            <Group.Button className="p-3" onPress={handleStopWorkflow} isDisabled={!isWorkflowRunning}>
-              <FaStop size={14} />
-            </Group.Button>
-          </Tooltip>
-          <Tooltip content="View logs">
-            <Group.Button className="p-3" isDisabled={isWorkflowRunning}>
-              <FaTerminal size={14} />
-            </Group.Button>
-          </Tooltip>
-          <Tooltip content="Settings">
-            <Group.Button className="p-3" isDisabled={isWorkflowRunning}>
-              <FaGear size={14} />
-            </Group.Button>
-          </Tooltip>
-        </Group>
+          <Group spacing="none">
+            <Tooltip content="Stop">
+              <Group.Button className="p-3" onPress={handleStopWorkflow} isDisabled={!isWorkflowRunning}>
+                <FaStop size={14} />
+              </Group.Button>
+            </Tooltip>
+            <Tooltip content="View logs">
+              <Group.Button className="p-3" isDisabled={isWorkflowRunning}>
+                <FaTerminal size={14} />
+              </Group.Button>
+            </Tooltip>
+            <Tooltip content="Settings">
+              <Group.Button className="p-3" isDisabled={isWorkflowRunning}>
+                <FaGear size={14} />
+              </Group.Button>
+            </Tooltip>
+          </Group>
+        </div>
       </div>
 
-      <main className="grid-paper isolate flex-1 relative overflow-hidden">
+      <main className="grid-paper bg-background-950 isolate border border-background-700 rounded-xs flex-1 relative overflow-hidden">
         <WorkflowCanvas workflowId={workflowId} nodeStatuses={nodeStatuses} nodeResults={nodeResults} />
       </main>
 

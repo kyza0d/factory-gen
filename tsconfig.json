@@ -20,7 +20,8 @@
     ],
     "paths": {
       "@/*": ["./src/*"],
-      "@convex/*": ["./convex/*"]
+      "@convex/*": ["./convex/*"],
+      "@registry/*": ["./packages/registry/src/*"]
     },
     "types": ["node", "react", "react-dom"]
   },

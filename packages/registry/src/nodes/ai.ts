@@ -1,10 +1,10 @@
-import { IOParam } from "../../schema/nodes";
+import { NodeMetadata } from "../types";
 
-export const AIProperties: {
-  inputs: IOParam[];
-  outputs: IOParam[];
-  parameters: IOParam[];
-} = {
+export const AIMetadata: NodeMetadata = {
+  type: "AI",
+  label: "AI Processing",
+  description: "Processes text using an AI model.",
+  uiComponent: "AI",
   inputs: [
     {
       id: "ai-input-1",
@@ -43,4 +43,5 @@ export const AIProperties: {
       options: ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
     },
   ],
+  modules: [],
 };

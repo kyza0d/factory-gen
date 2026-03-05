@@ -1,18 +1,14 @@
-import { IOParam } from "../../schema/nodes";
+import { NodeMetadata } from "../types";
 
-export const InputProperties: {
-  inputs: IOParam[];
-  outputs: IOParam[];
-  parameters: IOParam[];
-} = {
+export const InputMetadata: NodeMetadata = {
+  type: "Input",
+  label: "User Input",
+  description: "Captures input from the user.",
+  uiComponent: "Input",
   inputs: [],
   outputs: [
     {
       id: "output-1",
-      // For definitions, we describe the shape. 
-      // When instantiating, we generate IDs.
-      // But the IOParam schema requires an ID. 
-      // Let's use static IDs for the definition templates.
       name: "input",
       type: "string",
       description: "The user input text",
@@ -28,6 +24,13 @@ export const InputProperties: {
       description: "Default value if no input is provided",
       defaultValue: "Default User Input",
       options: null,
+    },
+  ],
+  modules: [
+    {
+      type: "text",
+      label: "User Input",
+      value: "Default User Input",
     },
   ],
 };

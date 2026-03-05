@@ -6,6 +6,7 @@ export default defineConfig({
     alias: {
       '@convex': path.resolve(__dirname, './convex'),
       '@': path.resolve(__dirname, './src'),
+      '@registry': path.resolve(__dirname, './packages/registry/src'),
     },
   },
   test: {

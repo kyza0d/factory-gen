@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { generateNodeHandler } from "../../ai";
-import { UINodeSchema, UINode } from "../../schema/nodes";
+import { generateNodeHandler } from "../../workflow_actions";
+import { UINodeSchema, UINode } from "@registry/types";
 import { ActionCtx } from "../../_generated/server";
 
 // Mock the Convex action context and arguments

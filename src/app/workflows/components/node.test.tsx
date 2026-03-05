@@ -34,7 +34,7 @@ vi.mock('../../../components/ui/debounced-input', () => ({
   DebouncedInput: () => <input />,
 }));
 
-import { UINode } from '@convex/schema/nodes';
+import { UINode } from '@registry/types';
 
 describe('Node component', () => {
   const mockNode: Partial<UINode> = {

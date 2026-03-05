@@ -18,7 +18,11 @@
     "forceConsistentCasingInFileNames": true,
     "module": "ESNext",
     "isolatedModules": true,
-    "noEmit": true
+    "noEmit": true,
+    "baseUrl": ".",
+    "paths": {
+      "@registry/*": ["../packages/registry/src/*"]
+    }
   },
   "include": ["./**/*"],
   "exclude": ["./_generated"]

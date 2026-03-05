@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { generateWorkflowHandler } from "../../ai";
-import { WorkflowGraphSchema, WorkflowGraph, UINode, IOParam } from "../../schema/nodes"; // Import WorkflowGraph
+import { generateWorkflowHandler } from "../../workflow_actions";
+import { WorkflowGraphSchema, WorkflowGraph, UINode, IOParam } from "@registry/types";
 import { ActionCtx } from "../../_generated/server";
 
 const mockCtx: ActionCtx = {} as unknown as ActionCtx;

@@ -5,7 +5,7 @@ import { useAction, useMutation } from "convex/react";
 import { Button, Input } from "ui-lab-components";
 import { FaArrowTurnUp, FaPencil } from "react-icons/fa6";
 import { api } from "../../../../convex/_generated/api";
-import { UINode, WorkflowGraph } from "../../../../convex/schema/nodes";
+import { UINode, WorkflowGraph } from "@registry/types";
 
 interface PromptInputProps {
   workflowId: string;
@@ -15,10 +15,10 @@ export function PromptInput({ workflowId }: PromptInputProps) {
   const [prompt, setPrompt] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  const generateNode = useAction(api.ai.generateNode);
+  const generateNode = useAction(api.workflow_actions.generateNode);
   const createNode = useMutation(api.nodes.createNode);
 
-  const generateWorkflow = useAction(api.ai.generateWorkflow);
+  const generateWorkflow = useAction(api.workflow_actions.generateWorkflow);
   const createWorkflow = useMutation(api.nodes.createWorkflow);
 
   const handleSubmit = async (e: FormEvent) => {

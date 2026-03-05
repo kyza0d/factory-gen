@@ -47,13 +47,15 @@ The architecture will be client-server based, with Next.js handling the user int
 ### Phase 1: Zod-safe UI Node Generation
 The core backend infrastructure for generating and managing Zod-safe UI nodes has been implemented.
 
-*   **Zod Schemas:** Defined robust schemas for UI nodes, inputs, outputs, and parameters in `convex/schema/nodes.ts`. These schemas ensure deterministic and type-safe JSON structures for the "Agent as a Tool" paradigm.
+*   **Shared Registry:** Created a `packages/registry` directory to host a single source of truth for node metadata, Zod schemas, and shared TypeScript types. This allows both the Convex backend and the Next.js frontend to reference consistent definitions for nodes, inputs, outputs, and parameters.
+*   **Zod Schemas:** Defined robust schemas for UI nodes, inputs, outputs, and parameters in `@registry/types`. These schemas ensure deterministic and type-safe JSON structures for the "Agent as a Tool" paradigm.
+*   **Node Metadata:** Moved static node definitions (metadata like label, type, description, IO ports) into `@registry/nodes`, separating metadata from the Convex-specific execution logic.
 *   **Database Schema:** Established Convex tables for `nodes`, `workflows`, and `edges` in `convex/schema.ts`, including appropriate indexing for efficient retrieval.
 *   **Node Management:** Implemented Convex mutations and queries in `convex/nodes.ts` for creating, retrieving, updating, and deleting UI nodes.
-*   **AI-Driven Generation:** Created a Convex Action in `convex/ai.ts` that leverages the Vercel AI SDK (`generateObject`) and OpenAI's models to dynamically generate valid UI node configurations from user prompts, strictly adhering to the Zod schemas.
+*   **AI-Driven Generation:** Created a Convex Action in `convex/workflow_actions.ts` that leverages the Vercel AI SDK (`generateText` with structured output) and OpenAI's models to dynamically generate valid UI node configurations from user prompts, strictly adhering to the Zod schemas.
 *   **Validation & Testing:** 
-    *   Unit tests for Zod schemas in `convex/schema/nodes.test.ts`.
-    *   Mocked unit tests for the AI generation logic in `convex/ai.test.ts`.
+    *   Unit tests for Zod schemas in `convex/__tests__/nodes/schema.test.ts`.
+    *   Mocked unit tests for the AI generation logic in `convex/__tests__/workflow_actions/`.
     *   All tests verified with `vitest`.
 
 Here is an organized set of tasks to guide the development of Factory:

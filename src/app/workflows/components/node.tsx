@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect } from "react";
 import Draggable from "react-draggable";
-import { UINode, IOParam, NodeExecutionStatus } from "@convex/schema/nodes";
+import { UINode, IOParam, NodeExecutionStatus } from "@registry/types";
 import { Badge, Input, Select } from "ui-lab-components";
 import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaRegTrashCan, FaRegImage, FaQuestion } from "react-icons/fa6";
 import { DebouncedInput } from "@/components/ui/debounced-input";

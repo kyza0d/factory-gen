@@ -2,16 +2,10 @@ import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
 import { ActionCtx } from "../../_generated/server";
 import { NodeDefinition } from "../types";
-import { AIProperties } from "./properties";
-import { AIModules } from "./modules";
+import { AIMetadata } from "@registry/nodes/ai";
 
 export const AINode: NodeDefinition = {
-  type: "AI",
-  label: "AI Processing",
-  description: "Processes text using an AI model.",
-  uiComponent: "AI",
-  ...AIProperties,
-  modules: AIModules,
+  ...AIMetadata,
   execute: async (_ctx: ActionCtx, { inputs, params }) => {
     const systemPrompt = params["systemPrompt"] || "You are a helpful AI.";
     const modelName = params["model"] || "gpt-4o";

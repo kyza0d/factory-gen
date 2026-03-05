@@ -3,7 +3,7 @@ import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { generateText, Output } from "ai";
 import { openai } from "@ai-sdk/openai";
-import { UINodeSchema, WorkflowGraphSchema, UINode, WorkflowGraph, IOParam, NodeExecutionStatus } from "./schema/nodes";
+import { UINodeSchema, WorkflowGraphSchema, UINode, WorkflowGraph, IOParam, NodeExecutionStatus } from "@registry/types";
 import { NodeRegistry, ALL_NODES } from "./nodes";
 
 // Define a type for execution events
@@ -159,7 +159,7 @@ export const executeWorkflowHandler = async (
 ): Promise<WorkflowExecutionResult> => {
   console.log(`Executing workflow with ID: ${args.workflowId}`);
 
-  const { nodes, edges } = await ctx.runQuery(internal.ai.getWorkflowData, {
+  const { nodes, edges } = await ctx.runQuery(internal.workflow_actions.getWorkflowData, {
     workflowId: args.workflowId
   });
 
