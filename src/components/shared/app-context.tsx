@@ -27,7 +27,6 @@ interface AppContextType {
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
   const [activeSection, setActiveSectionState] = useState<AppSection>(null);
   const [activeWorkflowId, setActiveWorkflowIdState] = useState<string | null>(null);
 
@@ -40,7 +39,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const savedCollapsed = localStorage.getItem(STORAGE_KEY_COLLAPSED);
     const savedActiveItem = localStorage.getItem(STORAGE_KEY_ACTIVE_ITEM);
-    
+
     if (savedCollapsed !== null) {
       setIsCollapsed(savedCollapsed === 'true');
     }
@@ -68,36 +67,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, [activeItem, isInitialized]);
 
   // Sync state with pathname for deep-links and browser back/forward
-  useEffect(() => {
-    const segments = pathname.split('/').filter(Boolean);
-    
-    if (segments.length === 0) {
-      setActiveSectionState('dashboard');
-      setActiveWorkflowIdState(null);
-    } else if (segments[0] === 'workflows') {
-      setActiveSectionState('workflows');
-      if (segments[1] && segments[1] !== 'new') {
-        setActiveWorkflowIdState(segments[1]);
-      } else {
-        setActiveWorkflowIdState(null);
-      }
-    } else if (segments[0] === 'settings') {
-      setActiveSectionState('settings');
-      setActiveWorkflowIdState(null);
-    } else if (segments[0] === 'help') {
-      setActiveSectionState('help');
-      setActiveWorkflowIdState(null);
-    } else if (['nodes', 'sources', 'agents'].includes(segments[0])) {
-      setActiveSectionState(segments[0] as AppSection);
-      setActiveWorkflowIdState(null);
-      // Auto-open sidebar sub-item if we're in that section
-      setActiveItemState(segments[0]);
-    } else {
-      setActiveSectionState(segments[0] as AppSection);
-      setActiveWorkflowIdState(null);
-    }
-  }, [pathname]);
-
   const setActiveSection = useCallback((section: AppSection) => {
     setActiveSectionState(section);
   }, []);

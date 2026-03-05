@@ -3,9 +3,9 @@
 import React, { useRef, useEffect } from "react";
 import Draggable from "react-draggable";
 import { UINode, IOParam, NodeExecutionStatus } from "@convex/schema/nodes";
-import { DebouncedInput } from "../../../components/ui/debounced-input";
 import { Badge, Input, Select } from "ui-lab-components";
 import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaRegTrashCan, FaRegImage, FaQuestion } from "react-icons/fa6";
+import { DebouncedInput } from "@/components/ui/debounced-input";
 
 interface NodeProps {
   node: UINode;
@@ -79,6 +79,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
     <Draggable
       nodeRef={nodeRef as React.RefObject<HTMLElement>}
       defaultPosition={node.position || { x: 50, y: 50 }}
+      grid={[25, 25]}
       onDrag={(_, data) => onDrag?.(node.id, { x: data.x, y: data.y })}
       onStop={(_, data) => onPositionChange(node.id, { x: data.x, y: data.y })}
       handle=".drag-handle"

@@ -2,7 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import { useCallback } from 'react';
-import { useApp, AppSection } from './app-context';
+import { useApp } from './app-context';
 
 export function useAppNavigation() {
   const router = useRouter();

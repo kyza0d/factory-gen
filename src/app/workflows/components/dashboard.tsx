@@ -2,10 +2,10 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { api } from "../../../../convex/_generated/api";
-import { Badge, Button, Card } from "ui-lab-components"; 
-import { useAppNavigation } from "../../../components/shared/app-navigation";
+import { Badge, Button, Card } from "ui-lab-components";
 import { useCallback } from "react";
+import { api } from "@convex/_generated/api";
+import { useAppNavigation } from "@/components/shared/app-navigation";
 
 export function Dashboard() {
   const workflows = useQuery(api.nodes.getWorkflowsWithStatus);
@@ -46,7 +46,7 @@ export function Dashboard() {
 
   return (
     <div className="space-y-6">
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 max-w-lg mx-auto">
         {workflows.map((workflow) => (
           <Card
             key={workflow._id}

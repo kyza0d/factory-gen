@@ -4,14 +4,12 @@ import { PromptInput } from "../components/prompt-input";
 import { WorkflowCanvas } from "../components/workflow-canvas";
 import { useAction, useQuery } from "convex/react";
 import { useState, useEffect } from "react";
-// import { ExecutionEvent } from "../../convex/ai";
-// import { NodeExecutionStatus } from "../../convex/schema/nodes";
 import { Group, Select, Divider, Tooltip, Badge, Input } from "ui-lab-components";
 import { FaPlay, FaSpinner, FaStop, FaTerminal, FaGear, FaCheck } from "react-icons/fa6";
 import { useParams } from "next/navigation";
-import { api } from "../../../../convex/_generated/api";
-import { NodeExecutionStatus } from "../../../../convex/schema/nodes";
-import { ExecutionEvent } from "../../../../convex/ai";
+import { api } from "@convex/_generated/api";
+import { NodeExecutionStatus } from "@convex/schema/nodes";
+import { ExecutionEvent } from "@convex/ai";
 
 export default function WorkflowPage() {
   const params = useParams();
