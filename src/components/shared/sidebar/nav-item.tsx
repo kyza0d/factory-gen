@@ -1,42 +1,71 @@
 "use client"
-import React, { useMemo } from 'react';
+import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
-import { useSelectedLayoutSegment } from 'next/navigation';
 import { IconType } from 'react-icons';
+import { useSidebar, useApp, AppSection } from '../app-context';
+import { useAppNavigation } from '../app-navigation';
 
 interface NavItemProps {
   item: {
     id: string;
     label: string;
     icon: IconType;
-    href: string;
+    href?: string;
   };
-  isCollapsed: boolean;
+  onSelect?: (id: string) => void;
+  currentActiveId?: string | null;
 }
 
-export const NavItem = React.memo(function NavItem({ item, isCollapsed }: NavItemProps) {
-  // isolated active state based only on current segment
-  const segment = useSelectedLayoutSegment();
+export const NavItem = React.memo(function NavItem({ item, onSelect, currentActiveId }: NavItemProps) {
+  const { isCollapsed } = useSidebar();
+  const { activeSection } = useApp();
+  const { navigateToWorkflows, navigateToDashboard, navigateToSettings, navigateToHelp } = useAppNavigation();
+  
   const isActive = useMemo(() => {
-    // If the href is '/', it matches only when the segment is null
-    if (item.href === '/') return segment === null;
-    // Otherwise, match based on the segment (e.g., 'workflows' matches '/workflows')
-    return segment === item.href.replace(/^\//, '').split('/')[0];
-  }, [segment, item.href]);
+    if (currentActiveId) {
+      return currentActiveId === item.id;
+    }
+    
+    // Check if the item's id matches the activeSection
+    return activeSection === item.id;
+  }, [activeSection, item.id, currentActiveId]);
 
   const Icon = item.icon;
 
-  return (
-    <Link
-      href={item.href}
-      className={`
-        flex items-center h-10 gap-4 px-3 rounded-sm transition-all duration-200 group relative
-        ${isActive
-          ? 'bg-background-900 text-foreground-100'
-          : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
-      `}
-      title={isCollapsed ? item.label : undefined}
-    >
+  const handleClick = useCallback((e: React.MouseEvent) => {
+    if (onSelect) {
+      onSelect(item.id);
+      return;
+    }
+
+    if (item.href) {
+      switch (item.id) {
+        case 'dashboard':
+          e.preventDefault();
+          navigateToDashboard();
+          break;
+        case 'workflows':
+          e.preventDefault();
+          navigateToWorkflows();
+          break;
+        case 'settings':
+          e.preventDefault();
+          navigateToSettings();
+          break;
+        case 'help':
+          e.preventDefault();
+          navigateToHelp();
+          break;
+        default:
+          // For other items with href, use standard Link behavior
+          // but we can also update active section if it's a known section
+          break;
+      }
+    }
+  }, [item.id, item.href, onSelect, navigateToDashboard, navigateToWorkflows, navigateToSettings, navigateToHelp]);
+
+  const content = (
+    <>
       <Icon
         size={17}
         className="shrink-0 transition-transform duration-200"
@@ -47,6 +76,39 @@ export const NavItem = React.memo(function NavItem({ item, isCollapsed }: NavIte
           {item.label}
         </span>
       )}
+    </>
+  );
+
+  if (onSelect && item.href === undefined) {
+    return (
+      <button
+        onClick={() => onSelect(item.id)}
+        className={`
+          flex items-center h-10 gap-4 px-3 rounded-sm transition-all duration-200 group relative w-full text-left
+          ${isActive
+            ? 'bg-background-900 text-foreground-100'
+            : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
+        `}
+        title={isCollapsed ? item.label : undefined}
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <Link
+      href={item.href || '#'}
+      onClick={handleClick}
+      className={`
+        flex items-center h-10 gap-4 px-3 rounded-sm transition-all duration-200 group relative
+        ${isActive
+          ? 'bg-background-900 text-foreground-100'
+          : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
+      `}
+      title={isCollapsed ? item.label : undefined}
+    >
+      {content}
     </Link>
   );
 });
