@@ -31,14 +31,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`bg-background-950 text-foreground-300 ${geistSans.variable} ${geistMono.variable}`}>
+    <html className="bg-black" lang="en" suppressHydrationWarning>
+      <body className={`bg-background-950/90 text-foreground-300 ${geistSans.variable} ${geistMono.variable}`}>
         <ConvexClientProvider>
-          <div className="flex h-screen">
+          <div className="flex h-screen overflow-hidden">
             <Sidebar />
-            <div className="flex-1 overflow-y-auto">
+            <main className="flex-1 flex flex-col min-w-0 relative">
               {children}
-            </div>
+            </main>
           </div>
         </ConvexClientProvider>
       </body>

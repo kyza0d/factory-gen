@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-FactoryGen is a powerful Next.js application designed to empower users to build and manage AI-powered workflows with ease. It features an intuitive visual canvas where users can construct complex workflows using a node-based interface. Leveraging Convex as its backend, FactoryGen provides real-time capabilities and robust data management for seamless workflow execution and interaction.
+Build and manage AI-powered workflows with ease. It features an intuitive visual canvas where users can construct complex workflows using a node-based interface. Leveraging Convex as its backend, FactoryGen provides real-time capabilities and robust data management for seamless workflow execution and interaction.
 
 ## Architecture
 
@@ -12,8 +12,7 @@ FactoryGen is built with a modern, full-stack architecture:
 -   **Backend & Realtime Database:** Convex serves as the unified backend for FactoryGen. It handles:
     -   **Database:** Persistent storage for workflow definitions, nodes, and other application data.
     -   **Realtime Updates:** Provides real-time synchronization for a highly interactive user experience on the canvas.
-    -   **Serverless Functions:** Executes backend logic and AI-related tasks (`convex/ai.ts`, `convex/nodes.ts`).
--   **Styling:** Global CSS (`app/globals.css`) and PostCSS are used for styling.
+    -   **Serverless Functions:** Executes backend logic and AI-related tasks (`convex/workflow_actions.ts`, `convex/nodes.ts`).-   **Styling:** Global CSS (`app/globals.css`) and PostCSS are used for styling.
 -   **Development Tools:** The project uses TypeScript for type safety, ESLint for code quality, and pnpm for package management.
 
 ## Screenshots
@@ -35,7 +34,7 @@ To get a local copy up and running, follow these simple steps.
 1.  Clone the repository:
     ```bash
     git clone https://github.com/kyza/factory-gen
-    cd factorygen
+    cd factory-gen
     ```
 2.  Install dependencies:
     ```bash
