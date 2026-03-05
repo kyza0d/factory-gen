@@ -39,4 +39,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
-.agents/\nresearch/\n
+
+.agents/
+research/
+
