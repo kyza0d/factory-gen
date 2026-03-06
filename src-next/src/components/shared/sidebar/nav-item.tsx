@@ -2,6 +2,7 @@
 import React, { useMemo, useCallback } from 'react';
 import Link from 'next/link';
 import { IconType } from 'react-icons';
+import { FaChevronRight } from 'react-icons/fa6';
 import { useApp, AppSection } from '../app-context';
 import { useSidebar } from './sidebar-context';
 import { useAppNavigation } from '../app-navigation';
@@ -93,6 +94,9 @@ export const NavItem = React.memo(function NavItem({ item, onSelect, currentActi
         title={isCollapsed ? item.label : undefined}
       >
         {content}
+        {!isCollapsed && (
+          <FaChevronRight size={11} className="ml-auto opacity-0 shrink-0 group-hover:opacity-70 transition-opacity" />
+        )}
       </button>
     );
   }

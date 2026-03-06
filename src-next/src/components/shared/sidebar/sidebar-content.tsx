@@ -92,7 +92,7 @@ export const SidebarContent = React.memo(function SidebarContent() {
         ${isCollapsed ? 'w-16' : 'w-64'}
         bg-background-950 border-r border-background-700
         flex text-xs flex-col transition-all duration-300 ease-in-out
-        h-screen sticky top-0
+        h-full
       `}
     >
       {/* Sidebar Header */}
