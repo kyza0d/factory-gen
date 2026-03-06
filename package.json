@@ -6,7 +6,8 @@
     "lint": "next lint src-next",
     "next": "next src-next",
     "clippy": "cargo clippy --manifest-path ./src-tauri/Cargo.toml",
-    "next-build": "next build src-next"
+    "next-build": "next build src-next",
+    "clean": "cargo clean --manifest-path ./src-tauri/Cargo.toml"
   },
   "dependencies": {
     "@ai-sdk/openai": "^3.0.37",
@@ -22,14 +23,14 @@
     "@tauri-apps/plugin-shell": "^2.3.5",
     "ai": "^6.0.105",
     "convex": "^1.32.0",
-    "lucide-react": "^0.576.0",
+    "lucide-react": "^0.577.0",
     "next": "16.1.6",
     "react": "19.2.4",
     "react-dom": "19.2.3",
     "react-draggable": "^4.5.0",
     "react-icons": "^5.6.0",
     "tsx": "^4.21.0",
-    "ui-lab-components": "^0.1.7",
+    "ui-lab-components": "file:../ui-lab/app/packages/@ui",
     "zod": "^4.3.6"
   },
   "devDependencies": {
