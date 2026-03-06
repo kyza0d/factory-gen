@@ -4,8 +4,8 @@ import { PromptInput } from "../components/prompt-input";
 import { WorkflowCanvas } from "../components/workflow-canvas";
 import { useAction, useQuery } from "convex/react";
 import { useState, useEffect } from "react";
-import { Group, Select, Divider, Tooltip, Badge, Input } from "ui-lab-components";
-import { FaPlay, FaSpinner, FaStop, FaTerminal, FaGear, FaCheck } from "react-icons/fa6";
+import { Group, Select, Divider, Tooltip, Badge, Input, Button } from "ui-lab-components";
+import { FaPlay, FaSpinner, FaStop, FaTerminal, FaGear, FaCheck, FaWrench, FaToolbox, FaScrewdriverWrench } from "react-icons/fa6";
 import { useParams } from "next/navigation";
 import { api } from "@convex/_generated/api";
 import { NodeExecutionStatus } from "@registry/types";
@@ -151,23 +151,23 @@ export function WorkflowView() {
             </Group.Select>
           </Group>
 
-          <Group spacing="none" className="rounded-sm h-9.5">
+          <div className="my-1 space-x-2">
             <Tooltip content="Stop">
-              <Group.Button className="p-3" onPress={handleStopWorkflow} isDisabled={!isWorkflowRunning}>
+              <Button variant="ghost" className="p-2" onPress={handleStopWorkflow} isDisabled={!isWorkflowRunning}>
                 <FaStop size={14} />
-              </Group.Button>
+              </Button>
             </Tooltip>
             <Tooltip content="View logs">
-              <Group.Button className="p-3" isDisabled={isWorkflowRunning}>
+              <Button variant="ghost" className="p-2" isDisabled={isWorkflowRunning}>
                 <FaTerminal size={14} />
-              </Group.Button>
+              </Button>
             </Tooltip>
             <Tooltip content="Settings">
-              <Group.Button className="p-3" isDisabled={isWorkflowRunning}>
-                <FaGear size={14} />
-              </Group.Button>
+              <Button variant="ghost" className="p-2" isDisabled={isWorkflowRunning}>
+                <FaScrewdriverWrench size={14} />
+              </Button>
             </Tooltip>
-          </Group>
+          </div>
         </div>
       </div>
 

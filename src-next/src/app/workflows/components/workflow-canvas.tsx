@@ -3,7 +3,7 @@
 import React from "react";
 import { useMutation, useQuery } from "convex/react";
 import { Node } from "./node";
-import { UINode, IOParam, NodeExecutionStatus } from "@registry/types";
+import { UINode, NodeExecutionStatus } from "@registry/types";
 import { api } from "@convex/_generated/api";
 
 interface WorkflowCanvasProps {
@@ -16,6 +16,15 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
   const nodes = useQuery(workflowId ? api.nodes.getNodesByWorkflow : (undefined as unknown as any), workflowId ? { workflowId } : (undefined as unknown as any));
   const edges = useQuery(workflowId ? api.nodes.getEdgesByWorkflow : (undefined as unknown as any), workflowId ? { workflowId } : (undefined as unknown as any));
   const updateNode = useMutation(api.nodes.updateNode);
+
+  const canvasRef = React.useRef<HTMLDivElement>(null);
+  const [portPositions, setPortPositions] = React.useState<Record<string, { x: number; y: number }>>({});
+
+  const getCanvasRect = React.useCallback(() => canvasRef.current?.getBoundingClientRect() ?? null, []);
+
+  const handlePortsChange = React.useCallback((_nodeId: string, ports: Record<string, { x: number; y: number }>) => {
+    setPortPositions(prev => ({ ...prev, ...ports }));
+  }, []);
 
   const [draggingNodes, setDraggingNodes] = React.useState<Record<string, { x: number; y: number }>>({});
 
@@ -99,7 +108,7 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
   }, [updateNode]);
 
   return (
-    <div className="absolute inset-0">
+    <div className="absolute inset-0" ref={canvasRef}>
       <div className="relative ">
         {nodes?.map((node: UINode) => (
           <Node
@@ -109,6 +118,8 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
             onParameterValueChange={handleParameterValueChange}
             onPositionChange={handlePositionChange}
             onDrag={handleNodeDrag}
+            onPortsChange={handlePortsChange}
+            getCanvasRect={getCanvasRect}
             executionStatus={nodeStatuses[node.id] || "idle"}
             result={nodeResults[node.id]}
           />
@@ -142,26 +153,15 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
                 strokeDasharray = "none";
               }
 
-              // Use dragging position if available, otherwise use stored position
-              const currentSourcePosition = draggingNodes[sourceNode.id] || sourceNode.position;
-              const currentTargetPosition = draggingNodes[targetNode.id] || targetNode.position;
+              // Look up measured port positions — skip edge if not yet measured
+              const sourcePos = edge.sourceHandle ? portPositions[edge.sourceHandle] : null;
+              const targetPos = edge.targetHandle ? portPositions[edge.targetHandle] : null;
+              if (!sourcePos || !targetPos) return null;
 
-              const sourceWidth = sourceNode.type === "Output" ? 320 : 256;
-
-              // Calculate port indices
-              const sourcePortIndex = sourceNode.outputs?.findIndex((o: IOParam) => o.id === edge.sourceHandle) ?? 0;
-              const targetPortIndex = targetNode.inputs?.findIndex((i: IOParam) => i.id === edge.targetHandle) ?? 0;
-
-              // --- Recalculated Offsets based on Node.tsx layout ---
-              const headerHeight = 16; // Accounting for Badge height, padding, and 2px borders
-              const ioSectionPaddingTop = 8; // py-2 on the IO Section div
-              const portDotOffset = -2; // Align with the center of the port dots (accounts for 2px border)
-
-              const x1 = (currentSourcePosition?.x || 50) + sourceWidth + portDotOffset - 7; // Shifted 7px left
-              const y1 = (currentSourcePosition?.y || 50) + headerHeight + ioSectionPaddingTop + sourcePortIndex
-
-              const x2 = (currentTargetPosition?.x || 50) - portDotOffset - 7; // Shifted 7px left
-              const y2 = (currentTargetPosition?.y || 50) + headerHeight + ioSectionPaddingTop + targetPortIndex
+              const x1 = sourcePos.x;
+              const y1 = sourcePos.y;
+              const x2 = targetPos.x;
+              const y2 = targetPos.y;
 
               // Path calculation: Rounded Orthogonal (Step)
               const midX = x1 + (x2 - x1) / 2;
