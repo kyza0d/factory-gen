@@ -79,7 +79,10 @@ describe("WorkspaceSwitcher", () => {
 
     render(<WorkspaceSwitcher />);
 
-    const activeItem = screen.getByText("Project Alpha").closest("[data-active]");
+    const activeItem = screen.getAllByText("Project Alpha")
+      .map(el => el.closest("[data-active]"))
+      .find(el => el?.getAttribute("data-active") === "true");
+
     expect(activeItem).toHaveAttribute("data-active", "true");
   });
 
@@ -92,7 +95,10 @@ describe("WorkspaceSwitcher", () => {
 
     render(<WorkspaceSwitcher />);
 
-    const inactiveItem = screen.getByText("Default").closest("[data-active]");
+    const inactiveItem = screen.getAllByText("Default")
+      .map(el => el.closest("[data-active]"))
+      .find(el => el !== null);
+
     expect(inactiveItem).not.toHaveAttribute("data-active", "true");
   });
 

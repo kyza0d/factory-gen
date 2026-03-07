@@ -1,29 +1,66 @@
 "use client"
-import React, { useMemo, useCallback } from 'react';
+import React, { useMemo, useCallback, useRef } from 'react';
 import {
   FaUser,
   FaGear,
   FaShapes,
   FaBook,
   FaChevronLeft,
+  FaPlus,
 } from 'react-icons/fa6';
 import { Divider, List } from 'ui-lab-components';
+import { useMutation } from 'convex/react';
+import { api } from "@convex/_generated/api";
 
 import { NavItem } from './nav-item';
 import { WorkflowsSection } from './workflows-section';
 import { WorkspaceSwitcher } from './workspace-switcher';
 import { useSidebar } from './sidebar-context';
-import { ALL_NODES_METADATA } from '@registry/nodes';
+import { ALL_NODES_METADATA, NodeMetadataRegistry } from '@registry/nodes';
+import { NodePalette } from '@/app/workflows/components/node-palette';
+import { useApp } from '../app-context';
 
 const MAIN_NAV_ITEMS = [
   { id: 'nodes', label: 'Nodes', icon: FaShapes },
   { id: 'sources', label: 'Sources', icon: FaBook },
-  { id: 'agents', label: 'Agents', icon: FaUser },
 ];
 
 const BOTTOM_NAV_ITEMS = [
   { id: 'settings', label: 'Settings', icon: FaGear, href: '/settings' },
 ];
+
+function NodeInserterSection() {
+  const { activeWorkflowId } = useApp();
+  const createNode = useMutation(api.nodes.createNode);
+  const nodeCounterRef = useRef(0);
+
+  const handleAddNode = useCallback(async (type: string) => {
+    if (!activeWorkflowId) return;
+    const meta = NodeMetadataRegistry[type];
+    if (!meta) return;
+    const count = nodeCounterRef.current++;
+    const id = crypto.randomUUID();
+    await createNode({
+      id,
+      type: meta.type,
+      label: meta.label,
+      inputs: (meta.inputs ?? []) as any[],
+      outputs: (meta.outputs ?? []) as any[],
+      parameters: (meta.parameters ?? []) as any[],
+      modules: meta.modules
+        ? meta.modules.map(m => ({ id: crypto.randomUUID(), type: m.type, label: m.label, value: m.value ?? null }))
+        : null,
+      workflowId: activeWorkflowId,
+      position: { x: 100 + (count % 10) * 50, y: 100 + (count % 10) * 50 },
+    });
+  }, [activeWorkflowId, createNode]);
+
+  if (!activeWorkflowId) {
+    return <p className="text-xs text-foreground-500 px-3 py-2 italic">Open a workflow to add nodes</p>;
+  }
+
+  return <NodePalette onAddNode={handleAddNode} />;
+}
 
 export const SidebarContent = React.memo(function SidebarContent() {
   const { isCollapsed, activeItem, setActiveItem, handleBack } = useSidebar();
@@ -40,21 +77,7 @@ export const SidebarContent = React.memo(function SidebarContent() {
     if (!activeItem) return null;
     switch (activeItem) {
       case 'nodes':
-        return (
-          <List aria-label="Nodes list" className="w-full m-0 space-y-2">
-            {ALL_NODES_METADATA.map((node) => (
-              <NavItem
-                key={node.type}
-                item={{
-                  id: node.type.toLowerCase(),
-                  label: node.label,
-                  icon: FaShapes,
-                  href: `/nodes/${node.type.toLowerCase()}`,
-                }}
-              />
-            ))}
-          </List>
-        );
+        return <NodeInserterSection />;
       case 'sources':
         return (
           <List aria-label="Sources list" className="w-full m-0 space-y-2">
@@ -94,7 +117,7 @@ export const SidebarContent = React.memo(function SidebarContent() {
       `}
     >
       {/* Sidebar Header */}
-      <div className="flex items-center justify-between py-2 px-2 shrink-0">
+      <div className="flex items-center justify-between pt-2 px-1 shrink-0">
         <WorkspaceSwitcher />
       </div>
 
