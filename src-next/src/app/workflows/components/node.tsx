@@ -46,14 +46,14 @@ const Port: React.FC<{ port: IOParam; type: "input" | "output" }> = ({
       <div
         data-port-id={port.id}
         data-port-type={type}
-        className="absolute left-[-4px] -translate-y-1/2 top-1/2 w-2 h-2 border border-background-600 bg-background-800"
+        className="absolute left-[-4px] mt-1 -translate-y-1/2 top-1/2 w-2 h-2 border border-background-600 bg-background-800"
       />
     )}
     {type === "output" && (
       <div
         data-port-id={port.id}
         data-port-type={type}
-        className="absolute right-[-4px] -translate-y-1/2 top-1/2 w-2 h-2 border border-background-600 bg-background-800"
+        className="absolute right-[-4px] mt-1 -translate-y-1/2 top-1/2 w-2 h-2 border border-background-600 bg-background-800"
       />
     )}
   </div>
@@ -184,7 +184,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
       <div
         ref={nodeRef}
         style={{ width: localWidth, height: localHeight, minHeight }}
-        className={`absolute bg-background-800 border ${getBorderColorClass(executionStatus)} rounded-sm group`}
+        className={`z-99 absolute bg-background-800 border ${getBorderColorClass(executionStatus)} rounded-sm group`}
       >
         {/* Bottom-right corner resize handle */}
         <div
@@ -240,8 +240,9 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                     )}
                     {param.options && (
                       <Select
-                      // defaultValue={param.defaultValue as string || ""}
-                      // onSelectionChange={(e) => onParameterValueChange(node.id, param.id, e.target.value)}
+                        defaultSelectedKey={param.defaultValue as string || undefined}
+                        valueLabel={param.defaultValue as string || undefined}
+                        onSelectionChange={(key) => onParameterValueChange(node.id, param.id, key)}
                       >
                         <Select.Trigger>
                           <Select.Value placeholder="Select an option" className="rounded-xl!" />

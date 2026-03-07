@@ -153,6 +153,7 @@
   --radius-ratio: 3.75;
 
   --default-border-width: 1.5px;
+  --border-width-base: 10px;
 }
 
 @layer utilities {

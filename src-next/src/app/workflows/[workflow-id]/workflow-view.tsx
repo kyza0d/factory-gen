@@ -77,8 +77,8 @@ export function WorkflowView() {
   };
 
   return (
-    <div className="flex px-2 pb-2 mt-12 flex-col flex-1 h-full min-h-0">
-      <div className="absolute py-0 mx-2 top-1 inset-x-0 z-10 flex justify-between items-center gap-2">
+    <div className="flex px-2 pb-2 flex-col flex-1 h-full min-h-0">
+      <div className="mx-2 my-1 inset-x-0 z-10 flex justify-between items-center gap-2">
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSidebar}
@@ -127,7 +127,7 @@ export function WorkflowView() {
         </div>
 
         <div className="flex gap-2">
-          <Group orientation="horizontal" spacing="none" className="rounded-sm h-9.5">
+          <Group orientation="horizontal" spacing="none" className="rounded-sm">
             <Group.Select selectedKey={mode} onSelectionChange={handleModeChange} isDisabled={isWorkflowRunning}>
               <Group.Button
                 onPress={handleExecuteWorkflow}

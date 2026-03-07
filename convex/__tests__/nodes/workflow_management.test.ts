@@ -1,67 +1,158 @@
 import { describe, it, expect, vi } from "vitest";
-import { createWorkflowHandler } from "../../nodes";
+import {
+  renameWorkflowHandler,
+  deleteWorkflowHandler,
+} from "../../nodes";
 import { MutationCtx } from "../../_generated/server";
 
-describe("Multi-Workflow Management", () => {
-  it("creates a workflow associated with a file", async () => {
-    const mockCtx = {
-      db: {
-        query: vi.fn().mockReturnValue({
-          filter: vi.fn().mockReturnValue({
-            first: vi.fn().mockResolvedValue(null),
+describe("Workflow Management", () => {
+  // ─── renameWorkflowHandler ────────────────────────────────────────────────
+
+  describe("renameWorkflowHandler", () => {
+    it("patches the workflow with the new name", async () => {
+      const existing = {
+        _id: "wf-db-1",
+        id: "wf-uuid-1",
+        name: "Old Name",
+      };
+      const mockCtx = {
+        db: {
+          query: vi.fn().mockReturnValue({
+            filter: vi.fn().mockReturnValue({
+              first: vi.fn().mockResolvedValue(existing),
+            }),
           }),
-          withIndex: vi.fn().mockReturnValue({
-            collect: vi.fn().mockResolvedValue([]),
+          patch: vi.fn(),
+        },
+      } as unknown as MutationCtx;
+
+      await renameWorkflowHandler(mockCtx, { id: "wf-uuid-1", name: "New Name" });
+
+      expect(mockCtx.db.patch).toHaveBeenCalledWith("wf-db-1", { name: "New Name" });
+    });
+
+    it("throws when the workflow is not found", async () => {
+      const mockCtx = {
+        db: {
+          query: vi.fn().mockReturnValue({
+            filter: vi.fn().mockReturnValue({
+              first: vi.fn().mockResolvedValue(null),
+            }),
           }),
-        }),
-        insert: vi.fn().mockResolvedValue("wf-db-id"),
-        delete: vi.fn(),
-      },
-    } as unknown as MutationCtx;
+        },
+      } as unknown as MutationCtx;
 
-    const workflowData = {
-      id: "wf-1",
-      name: "Test Workflow",
-      nodes: [],
-      edges: [],
-      fileId: "file-1" as any,
-    };
-
-    await createWorkflowHandler(mockCtx, { workflow: workflowData });
-
-    // Verify workflow insertion
-    expect(mockCtx.db.insert).toHaveBeenCalledWith("workflows", {
-      id: "wf-1",
-      name: "Test Workflow",
-      description: undefined,
-      fileId: "file-1",
+      await expect(
+        renameWorkflowHandler(mockCtx, { id: "nonexistent", name: "Foo" })
+      ).rejects.toThrow("Workflow not found");
     });
   });
 
-  it("handles multiple workflows without interference", async () => {
-    // This is more of an integration test, but we can mock the behavior
-    const mockCtx = {
-      db: {
-        query: vi.fn().mockReturnValue({
-          filter: vi.fn().mockImplementation((q) => ({
-            first: vi.fn().mockResolvedValue(null)
-          })),
-          withIndex: vi.fn().mockReturnValue({
-            collect: vi.fn().mockResolvedValue([]),
+  // ─── deleteWorkflowHandler ────────────────────────────────────────────────
+
+  describe("deleteWorkflowHandler", () => {
+    it("throws when the workflow is not found", async () => {
+      const mockCtx = {
+        db: {
+          query: vi.fn().mockReturnValue({
+            filter: vi.fn().mockReturnValue({
+              first: vi.fn().mockResolvedValue(null),
+            }),
           }),
-        }),
-        insert: vi.fn(),
-        delete: vi.fn(),
-      },
-    } as unknown as MutationCtx;
+        },
+      } as unknown as MutationCtx;
 
-    const wf1 = { id: "wf-1", name: "WF 1", nodes: [], edges: [], fileId: "file-1" as any };
-    const wf2 = { id: "wf-2", name: "WF 2", nodes: [], edges: [], fileId: "file-2" as any };
+      await expect(
+        deleteWorkflowHandler(mockCtx, { id: "nonexistent" })
+      ).rejects.toThrow("Workflow not found");
+    });
 
-    await createWorkflowHandler(mockCtx, { workflow: wf1 });
-    await createWorkflowHandler(mockCtx, { workflow: wf2 });
+    it("cascades deletion: removes nodes, edges, then workflow record", async () => {
+      const workflow = {
+        _id: "wf-db-1",
+        id: "wf-1",
+      };
+      const nodes = [
+        { _id: "node-db-1", id: "n1", workflowId: "wf-1" },
+        { _id: "node-db-2", id: "n2", workflowId: "wf-1" },
+      ];
+      const edges = [
+        { _id: "edge-db-1", id: "e1", workflowId: "wf-1" },
+      ];
 
-    expect(mockCtx.db.insert).toHaveBeenCalledWith("workflows", expect.objectContaining({ id: "wf-1", fileId: "file-1" }));
-    expect(mockCtx.db.insert).toHaveBeenCalledWith("workflows", expect.objectContaining({ id: "wf-2", fileId: "file-2" }));
+      const mockCtx = {
+        db: {
+          query: vi.fn().mockImplementation((table: string) => {
+            if (table === "workflows") {
+              return {
+                filter: vi.fn().mockReturnValue({
+                  first: vi.fn().mockResolvedValue(workflow),
+                }),
+              };
+            }
+            if (table === "nodes") {
+              return {
+                withIndex: vi.fn().mockReturnValue({
+                  collect: vi.fn().mockResolvedValue(nodes),
+                }),
+              };
+            }
+            if (table === "edges") {
+              return {
+                withIndex: vi.fn().mockReturnValue({
+                  collect: vi.fn().mockResolvedValue(edges),
+                }),
+              };
+            }
+            return {};
+          }),
+          delete: vi.fn(),
+        },
+      } as unknown as MutationCtx;
+
+      await deleteWorkflowHandler(mockCtx, { id: "wf-1" });
+
+      // Nodes deleted first
+      expect(mockCtx.db.delete).toHaveBeenCalledWith("node-db-1");
+      expect(mockCtx.db.delete).toHaveBeenCalledWith("node-db-2");
+      // Then edges
+      expect(mockCtx.db.delete).toHaveBeenCalledWith("edge-db-1");
+      // Finally workflow record
+      expect(mockCtx.db.delete).toHaveBeenCalledWith("wf-db-1");
+      // Total 4 deletes: 2 nodes + 1 edge + 1 workflow
+      expect(mockCtx.db.delete).toHaveBeenCalledTimes(4);
+    });
+
+    it("deletes an empty workflow (no nodes/edges) without error", async () => {
+      const workflow = {
+        _id: "wf-db-1",
+        id: "wf-1",
+      };
+      const mockCtx = {
+        db: {
+          query: vi.fn().mockImplementation((table: string) => {
+            if (table === "workflows") {
+              return {
+                filter: vi.fn().mockReturnValue({
+                  first: vi.fn().mockResolvedValue(workflow),
+                }),
+              };
+            }
+            // nodes and edges empty
+            return {
+              withIndex: vi.fn().mockReturnValue({
+                collect: vi.fn().mockResolvedValue([]),
+              }),
+            };
+          }),
+          delete: vi.fn(),
+        },
+      } as unknown as MutationCtx;
+
+      await deleteWorkflowHandler(mockCtx, { id: "wf-1" });
+
+      expect(mockCtx.db.delete).toHaveBeenCalledWith("wf-db-1");
+      expect(mockCtx.db.delete).toHaveBeenCalledTimes(1);
+    });
   });
 });

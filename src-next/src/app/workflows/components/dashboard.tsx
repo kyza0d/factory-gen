@@ -2,13 +2,18 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { Badge, Button, Card } from "ui-lab-components";
+import { Badge, Button } from "ui-lab-components";
 import { useCallback } from "react";
 import { api } from "@convex/_generated/api";
 import { useAppNavigation } from "@/components/shared/app-navigation";
+import { useApp } from "@/components/shared/app-context";
 
 export function Dashboard() {
-  const workflows = useQuery(api.nodes.getWorkflowsWithStatus);
+  const { activeWorkspaceId } = useApp();
+  const workflows = useQuery(
+    api.workspaces.getWorkflowsByWorkspace,
+    activeWorkspaceId !== null ? { workspaceId: activeWorkspaceId } : "skip",
+  );
   const { navigateToWorkflow } = useAppNavigation();
 
   const handleOpenWorkflow = useCallback((id: string) => {
@@ -45,40 +50,31 @@ export function Dashboard() {
   };
 
   return (
-    <div className="space-y-6 flex items-center justify-center pt-40 min-h-screen">
-      <div className="grid gap-4 max-w-md mx-auto">
+    <div className="w-full max-w-sm mx-auto pt-8">
+      <div className="space-y-2">
         {workflows.map((workflow) => (
-          <Card
+          <div
             key={workflow._id}
-            className="bg-transparent flex flex-col justify-between"
+            className="flex items-center justify-between gap-4 px-4 py-3 border-b border-background-700 hover:bg-muted/50 transition-colors"
           >
-            <Card.Header className="pb-0 border-b-0 flex items-start justify-between">
-              <h3 className="font-semibold text-sm leading-none tracking-tight">
-                {workflow.name}
-              </h3>
-              <Badge
-                className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(
-                  workflow.status
-                )}`}
-              >
-                {workflow.status || "idle"}
-              </Badge>
-            </Card.Header>
-            <Card.Body>
-              <p className="text-xs text-muted-foreground line-clamp-2">
-                {workflow.description || "No description provided."}
-              </p>
-            </Card.Body>
-            <Card.Footer className="bg-transparent flex justify-between">
-              <Button
-                variant="secondary"
-                size="sm"
-                onClick={() => handleOpenWorkflow(workflow.id)}
-              >
-                Open
-              </Button>
-            </Card.Footer>
-          </Card>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-medium text-sm truncate">{workflow.name}</h3>
+            </div>
+            <Badge
+              className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium whitespace-nowrap ${getStatusColor(
+                workflow.status
+              )}`}
+            >
+              {workflow.status || "idle"}
+            </Badge>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => handleOpenWorkflow(workflow.id)}
+            >
+              Open
+            </Button>
+          </div>
         ))}
       </div>
     </div>
