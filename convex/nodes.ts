@@ -3,11 +3,13 @@ import { v } from "convex/values";
 import { InputNode } from "./node_types/Input";
 import { AINode } from "./node_types/AI";
 import { OutputNode } from "./node_types/Output";
+import { TriggerNode } from "./node_types/Trigger";
 import { NodeDefinition } from "./node_types/types";
 
 export * from "./node_types/types";
 
 export const ALL_NODES: NodeDefinition[] = [
+  TriggerNode,
   InputNode,
   AINode,
   OutputNode,
@@ -278,6 +280,90 @@ export const deleteNode = mutation({
     }
     await ctx.db.delete(existing._id);
   },
+});
+
+/**
+ * Handler for creating a single edge between two nodes.
+ * Extracted for testing.
+ */
+export const createEdgeHandler = async (
+  ctx: MutationCtx,
+  args: {
+    id: string;
+    workflowId: string;
+    source: string;
+    sourceHandle: string | null;
+    target: string;
+    targetHandle: string | null;
+  }
+) => {
+  const existing = await ctx.db
+    .query("edges")
+    .withIndex("by_workflowId", (q) => q.eq("workflowId", args.workflowId))
+    .collect();
+
+  const duplicate = existing.find(
+    (e) =>
+      e.source === args.source &&
+      e.sourceHandle === args.sourceHandle &&
+      e.target === args.target &&
+      e.targetHandle === args.targetHandle
+  );
+
+  if (duplicate) {
+    throw new Error("Edge already exists");
+  }
+
+  return await ctx.db.insert("edges", {
+    id: args.id,
+    workflowId: args.workflowId,
+    source: args.source,
+    sourceHandle: args.sourceHandle,
+    target: args.target,
+    targetHandle: args.targetHandle,
+  });
+};
+
+export const createEdge = mutation({
+  args: {
+    id: v.string(),
+    workflowId: v.string(),
+    source: v.string(),
+    sourceHandle: v.optional(v.union(v.string(), v.null())),
+    target: v.string(),
+    targetHandle: v.optional(v.union(v.string(), v.null())),
+  },
+  handler: async (ctx, args) =>
+    createEdgeHandler(ctx, {
+      ...args,
+      sourceHandle: args.sourceHandle ?? null,
+      targetHandle: args.targetHandle ?? null,
+    }),
+});
+
+/**
+ * Handler for deleting a single edge by its external UUID.
+ * Extracted for testing.
+ */
+export const deleteEdgeHandler = async (
+  ctx: MutationCtx,
+  args: { id: string }
+) => {
+  const found = await ctx.db
+    .query("edges")
+    .filter((q) => q.eq(q.field("id"), args.id))
+    .first();
+
+  if (!found) {
+    throw new Error("Edge not found");
+  }
+
+  await ctx.db.delete(found._id);
+};
+
+export const deleteEdge = mutation({
+  args: { id: v.string() },
+  handler: deleteEdgeHandler,
 });
 
 /**

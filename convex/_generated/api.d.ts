@@ -9,12 +9,15 @@
  */
 
 import type * as files from "../files.js";
+import type * as http from "../http.js";
 import type * as node_types_AI_index from "../node_types/AI/index.js";
 import type * as node_types_Input_index from "../node_types/Input/index.js";
 import type * as node_types_Output_index from "../node_types/Output/index.js";
+import type * as node_types_Trigger_index from "../node_types/Trigger/index.js";
 import type * as node_types_types from "../node_types/types.js";
 import type * as nodes from "../nodes.js";
 import type * as schema_nodes from "../schema/nodes.js";
+import type * as triggers from "../triggers.js";
 import type * as workflow_actions from "../workflow_actions.js";
 import type * as workspaces from "../workspaces.js";
 
@@ -26,12 +29,15 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   files: typeof files;
+  http: typeof http;
   "node_types/AI/index": typeof node_types_AI_index;
   "node_types/Input/index": typeof node_types_Input_index;
   "node_types/Output/index": typeof node_types_Output_index;
+  "node_types/Trigger/index": typeof node_types_Trigger_index;
   "node_types/types": typeof node_types_types;
   nodes: typeof nodes;
   "schema/nodes": typeof schema_nodes;
+  triggers: typeof triggers;
   workflow_actions: typeof workflow_actions;
   workspaces: typeof workspaces;
 }>;
