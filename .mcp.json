@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "ui-lab-mcp": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "/home/kyza/Projects/ui-lab/app/packages/@mcp/dist/index.js"
+      ]
+    }
+  }
+}
