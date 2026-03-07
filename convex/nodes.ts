@@ -139,6 +139,7 @@ export const createWorkflowHandler = async (ctx: MutationCtx, args: {
     nodes: any[];
     edges: any[];
     fileId?: string;
+    workspaceId?: string;
   }
 }) => {
   const { workflow } = args;
@@ -174,6 +175,7 @@ export const createWorkflowHandler = async (ctx: MutationCtx, args: {
     name: workflow.name,
     description: workflow.description,
     fileId: workflow.fileId as any,
+    workspaceId: workflow.workspaceId,
   });
 
   // Insert all nodes
@@ -202,6 +204,7 @@ export const createEmptyWorkflow = mutation({
   args: {
     name: v.string(),
     fileId: v.optional(v.id("files")),
+    workspaceId: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const id = crypto.randomUUID();
@@ -209,6 +212,7 @@ export const createEmptyWorkflow = mutation({
       id,
       name: args.name,
       fileId: args.fileId,
+      workspaceId: args.workspaceId,
     });
     return id;
   },
@@ -225,7 +229,8 @@ export const createWorkflow = mutation({
       description: v.optional(v.string()),
       nodes: v.array(v.any()),
       edges: v.array(v.any()),
-      fileId: v.optional(v.string()), // Optional fileId association
+      fileId: v.optional(v.string()),
+      workspaceId: v.optional(v.string()),
     }),
   },
   handler: createWorkflowHandler,
@@ -273,4 +278,63 @@ export const deleteNode = mutation({
     }
     await ctx.db.delete(existing._id);
   },
+});
+
+/**
+ * Handler for renaming a workflow.
+ * Extracted for testing.
+ */
+export const renameWorkflowHandler = async (
+  ctx: MutationCtx,
+  args: { id: string; name: string }
+) => {
+  const workflow = await ctx.db
+    .query("workflows")
+    .filter((q) => q.eq(q.field("id"), args.id))
+    .first();
+
+  if (!workflow) throw new Error("Workflow not found");
+
+  await ctx.db.patch(workflow._id, { name: args.name });
+};
+
+export const renameWorkflow = mutation({
+  args: { id: v.string(), name: v.string() },
+  handler: renameWorkflowHandler,
+});
+
+/**
+ * Handler for deleting a workflow with cascade delete.
+ * Cascade order: nodes → edges → workflow record.
+ * Extracted for testing.
+ */
+export const deleteWorkflowHandler = async (
+  ctx: MutationCtx,
+  args: { id: string }
+) => {
+  const workflow = await ctx.db
+    .query("workflows")
+    .filter((q) => q.eq(q.field("id"), args.id))
+    .first();
+
+  if (!workflow) throw new Error("Workflow not found");
+
+  const nodes = await ctx.db
+    .query("nodes")
+    .withIndex("by_workflowId", (q) => q.eq("workflowId", args.id))
+    .collect();
+  for (const node of nodes) await ctx.db.delete(node._id);
+
+  const edges = await ctx.db
+    .query("edges")
+    .withIndex("by_workflowId", (q) => q.eq("workflowId", args.id))
+    .collect();
+  for (const edge of edges) await ctx.db.delete(edge._id);
+
+  await ctx.db.delete(workflow._id);
+};
+
+export const deleteWorkflow = mutation({
+  args: { id: v.string() },
+  handler: deleteWorkflowHandler,
 });

@@ -16,6 +16,7 @@ import type * as node_types_types from "../node_types/types.js";
 import type * as nodes from "../nodes.js";
 import type * as schema_nodes from "../schema/nodes.js";
 import type * as workflow_actions from "../workflow_actions.js";
+import type * as workspaces from "../workspaces.js";
 
 import type {
   ApiFromModules,
@@ -32,6 +33,7 @@ declare const fullApi: ApiFromModules<{
   nodes: typeof nodes;
   "schema/nodes": typeof schema_nodes;
   workflow_actions: typeof workflow_actions;
+  workspaces: typeof workspaces;
 }>;
 
 /**

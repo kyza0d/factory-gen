@@ -2,6 +2,13 @@ import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  workspaces: defineTable({
+    id: v.string(), // External UUID
+    name: v.string(),
+    isDefault: v.boolean(),
+    description: v.optional(v.string()),
+  }),
+
   nodes: defineTable({
     id: v.string(), // External UUID
     type: v.string(),
@@ -25,9 +32,12 @@ export default defineSchema({
     id: v.string(), // External UUID
     name: v.string(),
     description: v.optional(v.string()),
-    fileId: v.optional(v.id("files")), // New field to associate with a file
+    fileId: v.optional(v.id("files")),
+    workspaceId: v.optional(v.string()), // ID of the workspace it belongs to
     status: v.optional(v.union(v.literal("running"), v.literal("completed"), v.literal("failed"), v.literal("idle"))),
-  }).index("by_fileId", ["fileId"]),
+  })
+    .index("by_fileId", ["fileId"])
+    .index("by_workspaceId", ["workspaceId"]),
 
   files: defineTable({
     name: v.string(),
