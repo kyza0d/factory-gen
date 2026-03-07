@@ -8,8 +8,10 @@ interface AppContextType {
   // Application State
   activeSection: AppSection;
   activeWorkflowId: string | null;
+  activeWorkspaceId: string | null;
   setActiveSection: (section: AppSection) => void;
   setActiveWorkflowId: (id: string | null) => void;
+  setActiveWorkspaceId: (id: string | null) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -17,6 +19,7 @@ const AppContext = createContext<AppContextType | undefined>(undefined);
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [activeSection, setActiveSectionState] = useState<AppSection>(null);
   const [activeWorkflowId, setActiveWorkflowIdState] = useState<string | null>(null);
+  const [activeWorkspaceId, setActiveWorkspaceIdState] = useState<string | null>(null);
 
   const setActiveSection = useCallback((section: AppSection) => {
     setActiveSectionState(section);
@@ -26,13 +29,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setActiveWorkflowIdState(id);
   }, []);
 
+  const setActiveWorkspaceId = useCallback((id: string | null) => {
+    setActiveWorkspaceIdState(id);
+  }, []);
+
   const value = useMemo(() => ({
     activeSection,
     activeWorkflowId,
+    activeWorkspaceId,
     setActiveSection,
     setActiveWorkflowId,
+    setActiveWorkspaceId,
   }), [
-    activeSection, activeWorkflowId, setActiveSection, setActiveWorkflowId,
+    activeSection, activeWorkflowId, activeWorkspaceId,
+    setActiveSection, setActiveWorkflowId, setActiveWorkspaceId,
   ]);
 
   return (

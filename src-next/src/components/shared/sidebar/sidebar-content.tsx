@@ -11,9 +11,8 @@ import { Divider, List } from 'ui-lab-components';
 
 import { NavItem } from './nav-item';
 import { WorkflowsSection } from './workflows-section';
-import Logo from '../logo';
+import { WorkspaceSwitcher } from './workspace-switcher';
 import { useSidebar } from './sidebar-context';
-import { useAppNavigation } from '../app-navigation';
 import { ALL_NODES_METADATA } from '@registry/nodes';
 
 const MAIN_NAV_ITEMS = [
@@ -28,7 +27,6 @@ const BOTTOM_NAV_ITEMS = [
 
 export const SidebarContent = React.memo(function SidebarContent() {
   const { isCollapsed, activeItem, setActiveItem, handleBack } = useSidebar();
-  const { navigateToDashboard } = useAppNavigation();
 
   const displayedHeader = useMemo(() => {
     if (activeItem) {
@@ -97,12 +95,7 @@ export const SidebarContent = React.memo(function SidebarContent() {
     >
       {/* Sidebar Header */}
       <div className="flex items-center justify-between py-2 px-2 shrink-0">
-        <button
-          onClick={() => navigateToDashboard()}
-          className="ml-2 mt-1 flex items-center gap-2 overflow-hidden whitespace-nowrap animate-in fade-in duration-300 hover:opacity-80 transition-opacity"
-        >
-          <Logo className="w-6 h-6" />
-        </button>
+        <WorkspaceSwitcher />
       </div>
 
       <Divider size="sm" />

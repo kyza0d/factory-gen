@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { FaRoute, FaPlus } from 'react-icons/fa6';
-import { Expand, Button, Select, Menu, Scroll } from 'ui-lab-components';
+import { Expand, Button, Select, Menu, Scroll, Input } from 'ui-lab-components';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from "@convex/_generated/api"
 import { useApp } from '../app-context';
@@ -12,7 +12,7 @@ import { HiMiniEllipsisVertical } from 'react-icons/hi2';
 
 export const WorkflowsSection = React.memo(function WorkflowsSection() {
   const { isCollapsed } = useSidebar();
-  const { activeSection } = useApp();
+  const { activeSection, activeWorkspaceId } = useApp();
   const { navigateToWorkflows, navigateToWorkflow } = useAppNavigation();
   const isWorkflowsActive = activeSection === 'workflows';
 
@@ -34,12 +34,15 @@ export const WorkflowsSection = React.memo(function WorkflowsSection() {
 
   const handleCreateWorkflow = useCallback(async () => {
     try {
-      const id = await createEmptyWorkflow({ name: "Untitled Workflow" });
+      const id = await createEmptyWorkflow({
+        name: "Untitled Workflow",
+        workspaceId: activeWorkspaceId ?? undefined,
+      });
       navigateToWorkflow(id);
     } catch (error) {
       console.error("Failed to create workflow:", error);
     }
-  }, [createEmptyWorkflow, navigateToWorkflow]);
+  }, [createEmptyWorkflow, navigateToWorkflow, activeWorkspaceId]);
 
   return (
     <div className="w-full flex items-center mb-2">
@@ -96,45 +99,104 @@ export const WorkflowsSection = React.memo(function WorkflowsSection() {
 
 const WorkflowNavItem = React.memo(function WorkflowNavItem({ id, name }: { id: string; name: string; }) {
   const { activeWorkflowId } = useApp();
-  const { navigateToWorkflow } = useAppNavigation();
+  const { navigateToWorkflow, navigateToWorkflows } = useAppNavigation();
   const isActive = activeWorkflowId === id;
+
+  const renameWorkflowMutation = useMutation(api.nodes.renameWorkflow);
+  const deleteWorkflowMutation = useMutation(api.nodes.deleteWorkflow);
+
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [renameValue, setRenameValue] = useState(name);
 
   const handleClick = useCallback((e: React.MouseEvent) => {
     e.preventDefault();
     navigateToWorkflow(id);
   }, [id, navigateToWorkflow]);
 
+  const handleRenameStart = useCallback(() => {
+    setIsRenaming(true);
+    setRenameValue(name);
+  }, [name]);
+
+  const handleRenameConfirm = useCallback(async () => {
+    if (renameValue.trim() && renameValue !== name) {
+      try {
+        await renameWorkflowMutation({ id, name: renameValue.trim() });
+      } catch (error) {
+        console.error("Failed to rename workflow:", error);
+        setRenameValue(name);
+      }
+    }
+    setIsRenaming(false);
+  }, [renameValue, name, id, renameWorkflowMutation]);
+
+  const handleRenameKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      handleRenameConfirm();
+    } else if (e.key === "Escape") {
+      setIsRenaming(false);
+    }
+  }, [handleRenameConfirm]);
+
+  const handleDelete = useCallback(async () => {
+    try {
+      await deleteWorkflowMutation({ id });
+      // If deleting the active workflow, navigate away
+      if (isActive) {
+        navigateToWorkflows();
+      }
+    } catch (error) {
+      console.error("Failed to delete workflow:", error);
+    }
+  }, [id, isActive, deleteWorkflowMutation, navigateToWorkflows]);
+
   return (
-    <div className='relative group'>
-      <Link
-        href={`/workflows/${id}`}
-        onClick={handleClick}
-        className={`
+    <div className='relative group cursor-pointer'>
+      {isRenaming ? (
+        <Input
+          autoFocus
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onKeyDown={handleRenameKeyDown}
+          onBlur={handleRenameConfirm}
+          className="text-xs font-medium px-2 py-2 bg-background-800 border-none focus:ring-2 focus:ring-accent-500 rounded-sm"
+          aria-label="Workflow Name"
+        />
+      ) : (
+        <Link
+          href={`/workflows/${id}`}
+          onClick={handleClick}
+          className={`
 py-2 px-2 text-xs font-medium rounded-sm block
 ${isActive
-            ? 'text-foreground-100 bg-background-800'
-            : 'text-foreground-400 group-hover:text-foreground-50 group-hover:bg-background-900'}
+              ? 'text-foreground-100 bg-background-800'
+              : 'text-foreground-400 group-hover:text-foreground-50 group-hover:bg-background-900'}
 `}
-      >
-        {name}
-      </Link>
-      <Menu>
-        <Menu.Trigger className='p-2 absolute top-1/2 -translate-y-1/2 right-1'>
-          <div className='opacity-0 group-hover:opacity-100 rounded-sm hover:bg-background-700'>
+        >
+          {name}
+        </Link>
+      )}
+      {!isRenaming && (
+        <Menu type="pop-over">
+          <Menu.Trigger className='p-1.5 absolute top-1/2 -translate-y-1/2 right-1 opacity-0 group-hover:opacity-100 rounded-xs hover:bg-background-700'>
             <HiMiniEllipsisVertical />
-          </div>
-        </Menu.Trigger>
-        <Menu.Content>
-          <Menu.Item onSelect={() => console.log("Rename clicked")}>Rename</Menu.Item>
-          <Menu.Item onSelect={() => console.log("Delete clicked")}>Delete</Menu.Item>
-        </Menu.Content>
-      </Menu>
+          </Menu.Trigger>
+          <Menu.Content offset={4} side="right">
+            <Menu.Item onSelect={handleRenameStart}>Rename</Menu.Item>
+            <Menu.Item onSelect={handleDelete}>Delete</Menu.Item>
+          </Menu.Content>
+        </Menu>
+      )}
     </div>
   );
 });
 
 const WorkflowsList = React.memo(function WorkflowsList() {
-  const workflows = useQuery(api.nodes.getWorkflowsWithStatus);
+  const { activeWorkspaceId } = useApp();
+  const workflows = useQuery(
+    api.workspaces.getWorkflowsByWorkspace,
+    activeWorkspaceId !== null ? { workspaceId: activeWorkspaceId } : "skip",
+  );
 
   if (workflows === undefined) {
     return <div className="p-2 text-xs text-foreground-500">Loading...</div>;
@@ -146,7 +208,7 @@ const WorkflowsList = React.memo(function WorkflowsList() {
 
   return (
     <>
-      {workflows.map((workflow) => (
+      {workflows.map((workflow: { id: string; name: string }) => (
         <WorkflowNavItem
           key={workflow.id}
           id={workflow.id}
