@@ -11,12 +11,14 @@ import { api } from "@convex/_generated/api";
 import { NodeExecutionStatus } from "@registry/types";
 import { ExecutionEvent } from "@convex/workflow_actions";
 import { useSidebar } from "@/components/shared/sidebar/sidebar-context";
+import { useApp } from "@/components/shared/app-context";
 import { PanelLeft } from "lucide-react";
 
 export function WorkflowView() {
   const params = useParams();
   const workflowId = params["workflow-id"] as string;
   const { toggleSidebar, isCollapsed } = useSidebar();
+  const { setActiveWorkflowId } = useApp();
 
   const workflow = useQuery(api.nodes.getWorkflow, { workflowId });
 
@@ -30,6 +32,11 @@ export function WorkflowView() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [mode, setMode] = useState<string | null>("run");
   const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
+
+  useEffect(() => {
+    setActiveWorkflowId(workflowId);
+    return () => setActiveWorkflowId(null);
+  }, [workflowId, setActiveWorkflowId]);
 
   useEffect(() => {
     if (workflow) {
@@ -127,6 +134,23 @@ export function WorkflowView() {
         </div>
 
         <div className="flex gap-2">
+          <div className="my-1 space-x-2">
+            <Tooltip content="Stop">
+              <Button variant="ghost" className="p-2" onPress={handleStopWorkflow} isDisabled={!isWorkflowRunning}>
+                <FaStop size={14} />
+              </Button>
+            </Tooltip>
+            <Tooltip content="View logs">
+              <Button variant="ghost" className="p-2" isDisabled={isWorkflowRunning}>
+                <FaTerminal size={14} />
+              </Button>
+            </Tooltip>
+            <Tooltip content="Settings">
+              <Button variant="ghost" className="p-2" isDisabled={isWorkflowRunning}>
+                <FaScrewdriverWrench size={14} />
+              </Button>
+            </Tooltip>
+          </div>
           <Group orientation="horizontal" spacing="none" className="rounded-sm">
             <Group.Select selectedKey={mode} onSelectionChange={handleModeChange} isDisabled={isWorkflowRunning}>
               <Group.Button
@@ -151,23 +175,6 @@ export function WorkflowView() {
             </Group.Select>
           </Group>
 
-          <div className="my-1 space-x-2">
-            <Tooltip content="Stop">
-              <Button variant="ghost" className="p-2" onPress={handleStopWorkflow} isDisabled={!isWorkflowRunning}>
-                <FaStop size={14} />
-              </Button>
-            </Tooltip>
-            <Tooltip content="View logs">
-              <Button variant="ghost" className="p-2" isDisabled={isWorkflowRunning}>
-                <FaTerminal size={14} />
-              </Button>
-            </Tooltip>
-            <Tooltip content="Settings">
-              <Button variant="ghost" className="p-2" isDisabled={isWorkflowRunning}>
-                <FaScrewdriverWrench size={14} />
-              </Button>
-            </Tooltip>
-          </div>
         </div>
       </div>
 
