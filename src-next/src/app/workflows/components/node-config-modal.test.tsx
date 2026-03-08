@@ -1,7 +1,28 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { NodeConfigModal } from "./node-config-modal";
 import { UINode } from "@registry/types";
+
+// Mock Convex hooks
+const { mockUseMutation } = vi.hoisted(() => ({
+  mockUseMutation: vi.fn(() => vi.fn().mockResolvedValue({})),
+}));
+
+vi.mock("convex/react", () => ({
+  useMutation: mockUseMutation,
+  useQuery: vi.fn(),
+}));
+
+vi.mock("@convex/_generated/api", () => ({
+  api: {
+    node_configuration: {
+      updateNodeParameterPublic: "updateNodeParameterPublic",
+      addNodeModulePublic: "addNodeModulePublic",
+      updateNodeModulePublic: "updateNodeModulePublic",
+      removeNodeModulePublic: "removeNodeModulePublic",
+    },
+  },
+}));
 
 // NodeConfigModal doesn't exist yet — this file drives its implementation.
 // It opens when the user wants to edit a node's parameters and emits
@@ -44,7 +65,8 @@ describe("NodeConfigModal", () => {
       <NodeConfigModal node={makeNode()} onSave={vi.fn()} onClose={vi.fn()} />
     );
 
-    expect(screen.getByText("My AI Node")).toBeInTheDocument();
+    // Use getByRole to target the modal title specifically (usually an h4 in this project)
+    expect(screen.getByRole("heading", { name: "My AI Node" })).toBeInTheDocument();
   });
 
   it("renders a field for each parameter", () => {
@@ -52,7 +74,8 @@ describe("NodeConfigModal", () => {
       <NodeConfigModal node={makeNode()} onSave={vi.fn()} onClose={vi.fn()} />
     );
 
-    expect(screen.getByLabelText(/model/i)).toBeInTheDocument();
+    // The label is one element, the description is another. Target the label specifically.
+    expect(screen.getByText(/model/i, { selector: 'label' })).toBeInTheDocument();
     expect(screen.getByLabelText(/prompt/i)).toBeInTheDocument();
   });
 
@@ -102,8 +125,8 @@ describe("NodeConfigModal", () => {
       <NodeConfigModal node={makeNode()} onSave={vi.fn()} onClose={vi.fn()} />
     );
 
-    // "model" has options — should render a <select> or combobox
-    const modelSelect = screen.getByRole("combobox", { name: /model/i });
+    // The UI library renders this as a button with the current value as its name.
+    const modelSelect = screen.getByRole("button", { name: /gpt-4/i });
     expect(modelSelect).toBeInTheDocument();
   });
 

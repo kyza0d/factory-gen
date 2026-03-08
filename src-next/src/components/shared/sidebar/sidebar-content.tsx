@@ -46,9 +46,15 @@ function NodeInserterSection() {
       label: meta.label,
       inputs: (meta.inputs ?? []) as any[],
       outputs: (meta.outputs ?? []) as any[],
-      parameters: (meta.parameters ?? []) as any[],
+      parameters: (meta.parameters ?? []).map(p => ({ ...p, enabled: true })) as any[],
       modules: meta.modules
-        ? meta.modules.map(m => ({ id: crypto.randomUUID(), type: m.type, label: m.label, value: m.value ?? null }))
+        ? meta.modules.map(m => ({ 
+            id: crypto.randomUUID(), 
+            type: m.type, 
+            label: m.label, 
+            value: m.value ?? null,
+            enabled: m.enabled ?? true 
+          }))
         : null,
       workflowId: activeWorkflowId,
       position: { x: 100 + (count % 10) * 50, y: 100 + (count % 10) * 50 },

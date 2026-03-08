@@ -3,8 +3,8 @@
 import React, { useRef, useEffect, useLayoutEffect, useState, useCallback } from "react";
 import Draggable from "react-draggable";
 import { UINode, IOParam, NodeExecutionStatus } from "@registry/types";
-import { Badge, Input, Select } from "ui-lab-components";
-import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaRegTrashCan, FaRegImage, FaQuestion, FaBolt, FaGear } from "react-icons/fa6";
+import { Badge, Button, Input, Label, Select } from "ui-lab-components";
+import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaTrashCan, FaRegImage, FaQuestion, FaBolt, FaGear } from "react-icons/fa6";
 import { DebouncedInput } from "@/components/ui/debounced-input";
 import { TriggerNodeConfig } from "./trigger-node-config";
 import { ConnectionState } from "../canvas-connection";
@@ -31,6 +31,7 @@ interface NodeProps {
   isSelected?: boolean;
   onSelect?: (nodeId: string) => void;
   onDelete?: (nodeId: string) => void;
+  onDetach?: (nodeId: string) => void;
 }
 
 const nodeTypeIcons: Record<string, React.ElementType> = {
@@ -39,7 +40,7 @@ const nodeTypeIcons: Record<string, React.ElementType> = {
   Output: FaRegEye,
   TextSummarizer: FaFileLines,
   ImageGenerator: FaRegImage,
-  InvalidNode: FaRegTrashCan,
+  InvalidNode: FaTrashCan,
   Trigger: FaBolt,
   // Default icon for unknown node types
   default: FaQuestion,
@@ -77,7 +78,7 @@ const Port: React.FC<PortProps> = ({ port, type, onPortClick, disabled }) => (
   </div>
 );
 
-export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange, onParameterValueChange, onPositionChange, onDrag, onPortsChange, getCanvasRect, executionStatus, result, trigger, onTriggerUpdate, onPortClick, connectionState, onOpenConfig, isSelected, onSelect, onDelete }) => {
+export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange, onParameterValueChange, onPositionChange, onDrag, onPortsChange, getCanvasRect, executionStatus, result, trigger, onTriggerUpdate, onPortClick, connectionState, onOpenConfig, isSelected, onSelect, onDelete, onDetach }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
   const IconComponent = nodeTypeIcons[node.type] || nodeTypeIcons.default;
@@ -188,8 +189,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
     onPortClick?.(portId, portType, node.id);
   }, [onPortClick, node.id]);
 
-  const handleGearClick = useCallback((e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleGearClick = useCallback(() => {
     onOpenConfig?.(node.id);
   }, [onOpenConfig, node.id]);
 
@@ -218,6 +218,10 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
           e.stopPropagation();
           onSelect?.(node.id);
         }}
+        onDoubleClick={(e) => {
+          e.stopPropagation();
+          onDetach?.(node.id);
+        }}
       >
         {/* Bottom-right corner resize handle */}
         <div
@@ -232,15 +236,9 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
         <div ref={contentRef}>
           <div className="relative">
             {isSelected && (
-              <div className="absolute -top-8 right-0 flex items-center gap-1 bg-background-700 border border-background-600 rounded-sm px-1 py-0.5 z-10">
-                {node.parameters && node.parameters.length > 0 && (
-                  <button onClick={handleGearClick} className="p-1 rounded-xs text-foreground-400 hover:text-foreground-100 hover:bg-background-600" aria-label="Configure node">
-                    <FaGear size={11} />
-                  </button>
-                )}
-                <button onClick={(e) => { e.stopPropagation(); onDelete?.(node.id); }} className="p-1 rounded-xs text-foreground-400 hover:text-danger-400 hover:bg-background-600" aria-label="Delete node">
-                  <FaRegTrashCan size={11} />
-                </button>
+              <div className="absolute -top-12 left-0 flex items-center gap-1 bg-background-700 border border-background-600 rounded-sm px-1 py-0.5 z-10" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" className="p-2" size="sm" onPress={handleGearClick} aria-label="Configure node" icon={{ left: <FaGear size={11} /> }} />
+                <Button variant="ghost" className="p-2" size="sm" onPress={() => onDelete?.(node.id)} aria-label="Delete node" icon={{ left: <FaTrashCan size={11} /> }} />
               </div>
             )}
             <div className="flex bg-background-700 p-2 rounded-t-sm border-b border-background-600 items-center justify-between drag-handle">
@@ -302,9 +300,9 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                   <div className="px-3 pb-3">
                     {node.modules.map((module: { id: string; type: string; label: string; value: string | null; }) => (
                       <div key={module.id} className="mb-2">
-                        <label className="block font-semibold text-xs text-foreground-400">
+                        <Label size="sm" styles="block font-semibold text-foreground-400">
                           {module.label}
-                        </label>
+                        </Label>
                         {module.type === "badge" && (
                           <div className="mt-1">
                             <Badge
@@ -313,10 +311,10 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                                 module.value === "listening"
                                   ? "bg-success-900 text-success-300"
                                   : module.value === "paused"
-                                  ? "bg-warning-900 text-warning-300"
-                                  : module.value === "error"
-                                  ? "bg-danger-900 text-danger-300"
-                                  : "bg-background-600 text-foreground-400"
+                                    ? "bg-warning-900 text-warning-300"
+                                    : module.value === "error"
+                                      ? "bg-danger-900 text-danger-300"
+                                      : "bg-background-600 text-foreground-400"
                               }
                             >
                               {module.value ?? "idle"}
@@ -324,11 +322,11 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                           </div>
                         )}
                         {module.type === "text" && (
-                          <input
+                          <Input
                             readOnly
                             value={module.value ?? ""}
                             placeholder="No events yet"
-                            className="text-xs mt-1 block w-full p-1 bg-background-700 border border-background-600 rounded text-foreground-300"
+                            styles="text-xs mt-1"
                           />
                         )}
                       </div>
@@ -343,9 +341,9 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                     <p className="mb-1 text-xs font-semibold">Parameters</p>
                     {node.parameters.map((param: IOParam) => (
                       <div key={param.id} className="mb-2">
-                        <label className="text-xs capitalize font-semibold block">
+                        <Label size="sm" styles="capitalize font-semibold block">
                           {param.name}
-                        </label>
+                        </Label>
                         {(param.type === "string" || !param.type) && !param.options && (
                           <Input
                             type="text"
@@ -355,7 +353,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                         )}
                         {param.options && (
                           <Select
-                            defaultSelectedKey={param.defaultValue as string || undefined}
+                            selectedKey={param.defaultValue as string || undefined}
                             valueLabel={param.defaultValue as string || undefined}
                             onSelectionChange={(key) => onParameterValueChange(node.id, param.id, key)}
                           >
@@ -378,9 +376,9 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                     <p className="text-xs font-semibold mb-1">Modules</p>
                     {node.modules.map((module: { id: string; type: string; label: string; value: string | null; }) => (
                       <div key={module.id} className="mb-2">
-                        <label className="block mt-6 font-semibold text-xs">
+                        <Label size="sm" styles="block mt-6 font-semibold">
                           {module.label}
-                        </label>
+                        </Label>
                         {module.type === "text" && (
                           <DebouncedInput
                             value={(node.type === "Output" && result !== undefined) ? String(result) : (module.value || "")}

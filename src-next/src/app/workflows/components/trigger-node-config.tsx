@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Input, Select } from "ui-lab-components";
+import { Input, Select, Button } from "ui-lab-components";
 import { FaCopy, FaCheck } from "react-icons/fa6";
 
 const DEPLOYMENT_URL =
@@ -28,14 +28,15 @@ function CopyButton({ text }: { text: string }) {
   };
 
   return (
-    <button
-      type="button"
-      onClick={handleCopy}
-      className="ml-1 p-1 text-foreground-400 hover:text-foreground-200 transition-colors"
+    <Button
+      variant="ghost"
+      size="sm"
+      onPress={handleCopy}
+      styles={{ root: "ml-1 p-1" }}
       title="Copy to clipboard"
     >
       {copied ? <FaCheck className="w-3 h-3 text-success-500" /> : <FaCopy className="w-3 h-3" />}
-    </button>
+    </Button>
   );
 }
 
@@ -297,12 +298,12 @@ function CronConfig({
       <div>
         <label className="text-xs font-semibold block text-foreground-400 mb-2">Frequency</label>
         <Select
-          defaultSelectedKey={selectedFrequency}
+          selectedKey={selectedFrequency}
           valueLabel={selectedFrequency}
           onSelectionChange={(key) => handleFrequencyChangeAndNotify(key as Frequency)}
         >
           <Select.Trigger>
-            <Select.Value placeholder="Select frequency" className="rounded-xl!" />
+            <Select.Value placeholder="Select frequency" />
           </Select.Trigger>
           <Select.Content>
             <Select.Item value="minutely">Every X minutes</Select.Item>
@@ -317,13 +318,12 @@ function CronConfig({
       {selectedFrequency === "minutely" && (
         <div>
           <label className="text-xs font-semibold block text-foreground-400 mb-2">Every N minutes</label>
-          <input
+          <Input
             type="number"
             min="1"
             max="59"
             value={frequencyValue}
             onChange={(e) => handleFrequencyValueChange(parseInt(e.target.value) || 1)}
-            className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
           />
         </div>
       )}
@@ -332,26 +332,30 @@ function CronConfig({
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="text-xs font-semibold block text-foreground-400 mb-2">Every N hours</label>
-            <input
+            <Input
               type="number"
               min="1"
               max="23"
               value={frequencyValue}
               onChange={(e) => handleFrequencyValueChange(parseInt(e.target.value) || 1)}
-              className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
             />
           </div>
           <div className="flex-1">
             <label className="text-xs font-semibold block text-foreground-400 mb-2">At minute</label>
-            <select
-              value={minuteValue}
-              onChange={(e) => handleMinuteChange(parseInt(e.target.value))}
-              className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+            <Select
+              selectedKey={minuteValue.toString()}
+              valueLabel={minuteValue.toString().padStart(2, "0")}
+              onSelectionChange={(key) => handleMinuteChange(parseInt(key as string))}
             >
-              {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-                <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
-              ))}
-            </select>
+              <Select.Trigger>
+                <Select.Value placeholder="Select minute" className="rounded-xl!" />
+              </Select.Trigger>
+              <Select.Content>
+                {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                  <Select.Item key={m} value={m.toString()}>{m.toString().padStart(2, "0")}</Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
           </div>
         </div>
       )}
@@ -360,27 +364,37 @@ function CronConfig({
         <div className="flex gap-3">
           <div className="flex-1">
             <label className="text-xs font-semibold block text-foreground-400 mb-2">Hour</label>
-            <select
-              value={hourValue}
-              onChange={(e) => handleHourChange(parseInt(e.target.value))}
-              className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+            <Select
+              selectedKey={hourValue.toString()}
+              valueLabel={hourValue.toString().padStart(2, "0")}
+              onSelectionChange={(key) => handleHourChange(parseInt(key as string))}
             >
-              {Array.from({ length: 24 }, (_, i) => i).map((h) => (
-                <option key={h} value={h}>{h.toString().padStart(2, "0")}</option>
-              ))}
-            </select>
+              <Select.Trigger>
+                <Select.Value placeholder="Select hour" className="rounded-xl!" />
+              </Select.Trigger>
+              <Select.Content>
+                {Array.from({ length: 24 }, (_, i) => i).map((h) => (
+                  <Select.Item key={h} value={h.toString()}>{h.toString().padStart(2, "0")}</Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
           </div>
           <div className="flex-1">
             <label className="text-xs font-semibold block text-foreground-400 mb-2">Minute</label>
-            <select
-              value={minuteValue}
-              onChange={(e) => handleMinuteChange(parseInt(e.target.value))}
-              className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+            <Select
+              selectedKey={minuteValue.toString()}
+              valueLabel={minuteValue.toString().padStart(2, "0")}
+              onSelectionChange={(key) => handleMinuteChange(parseInt(key as string))}
             >
-              {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-                <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
-              ))}
-            </select>
+              <Select.Trigger>
+                <Select.Value placeholder="Select minute" className="rounded-xl!" />
+              </Select.Trigger>
+              <Select.Content>
+                {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                  <Select.Item key={m} value={m.toString()}>{m.toString().padStart(2, "0")}</Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
           </div>
         </div>
       )}
@@ -389,40 +403,55 @@ function CronConfig({
         <div className="flex flex-col gap-3">
           <div>
             <label className="text-xs font-semibold block text-foreground-400 mb-2">Day of week</label>
-            <select
-              value={dayOfWeek}
-              onChange={(e) => handleDayOfWeekChange(e.target.value)}
-              className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+            <Select
+              selectedKey={dayOfWeek}
+              valueLabel={DAY_NAMES[parseInt(dayOfWeek)] || dayOfWeek}
+              onSelectionChange={(key) => handleDayOfWeekChange(key as string)}
             >
-              {DAY_NAMES.map((day, idx) => (
-                <option key={idx} value={idx.toString()}>{day}</option>
-              ))}
-            </select>
+              <Select.Trigger>
+                <Select.Value placeholder="Select day" className="rounded-xl!" />
+              </Select.Trigger>
+              <Select.Content>
+                {DAY_NAMES.map((day, idx) => (
+                  <Select.Item key={idx} value={idx.toString()}>{day}</Select.Item>
+                ))}
+              </Select.Content>
+            </Select>
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="text-xs font-semibold block text-foreground-400 mb-2">Hour</label>
-              <select
-                value={hourValue}
-                onChange={(e) => handleHourChange(parseInt(e.target.value))}
-                className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+              <Select
+                selectedKey={hourValue.toString()}
+                valueLabel={hourValue.toString().padStart(2, "0")}
+                onSelectionChange={(key) => handleHourChange(parseInt(key as string))}
               >
-                {Array.from({ length: 24 }, (_, i) => i).map((h) => (
-                  <option key={h} value={h}>{h.toString().padStart(2, "0")}</option>
-                ))}
-              </select>
+                <Select.Trigger>
+                  <Select.Value placeholder="Select hour" className="rounded-xl!" />
+                </Select.Trigger>
+                <Select.Content>
+                  {Array.from({ length: 24 }, (_, i) => i).map((h) => (
+                    <Select.Item key={h} value={h.toString()}>{h.toString().padStart(2, "0")}</Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
             </div>
             <div className="flex-1">
               <label className="text-xs font-semibold block text-foreground-400 mb-2">Minute</label>
-              <select
-                value={minuteValue}
-                onChange={(e) => handleMinuteChange(parseInt(e.target.value))}
-                className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+              <Select
+                selectedKey={minuteValue.toString()}
+                valueLabel={minuteValue.toString().padStart(2, "0")}
+                onSelectionChange={(key) => handleMinuteChange(parseInt(key as string))}
               >
-                {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-                  <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
-                ))}
-              </select>
+                <Select.Trigger>
+                  <Select.Value placeholder="Select minute" className="rounded-xl!" />
+                </Select.Trigger>
+                <Select.Content>
+                  {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                    <Select.Item key={m} value={m.toString()}>{m.toString().padStart(2, "0")}</Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
             </div>
           </div>
         </div>
@@ -432,39 +461,48 @@ function CronConfig({
         <div className="flex flex-col gap-3">
           <div>
             <label className="text-xs font-semibold block text-foreground-400 mb-2">Day of month</label>
-            <input
+            <Input
               type="number"
               min="1"
               max="31"
               value={dayOfMonth}
               onChange={(e) => handleDayOfMonthChange(parseInt(e.target.value) || 1)}
-              className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
             />
           </div>
           <div className="flex gap-3">
             <div className="flex-1">
               <label className="text-xs font-semibold block text-foreground-400 mb-2">Hour</label>
-              <select
-                value={hourValue}
-                onChange={(e) => handleHourChange(parseInt(e.target.value))}
-                className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+              <Select
+                selectedKey={hourValue.toString()}
+                valueLabel={hourValue.toString().padStart(2, "0")}
+                onSelectionChange={(key) => handleHourChange(parseInt(key as string))}
               >
-                {Array.from({ length: 24 }, (_, i) => i).map((h) => (
-                  <option key={h} value={h}>{h.toString().padStart(2, "0")}</option>
-                ))}
-              </select>
+                <Select.Trigger>
+                  <Select.Value placeholder="Select hour" className="rounded-xl!" />
+                </Select.Trigger>
+                <Select.Content>
+                  {Array.from({ length: 24 }, (_, i) => i).map((h) => (
+                    <Select.Item key={h} value={h.toString()}>{h.toString().padStart(2, "0")}</Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
             </div>
             <div className="flex-1">
               <label className="text-xs font-semibold block text-foreground-400 mb-2">Minute</label>
-              <select
-                value={minuteValue}
-                onChange={(e) => handleMinuteChange(parseInt(e.target.value))}
-                className="w-full px-2 py-1 text-sm bg-background-700 border border-background-600 rounded text-foreground-200"
+              <Select
+                selectedKey={minuteValue.toString()}
+                valueLabel={minuteValue.toString().padStart(2, "0")}
+                onSelectionChange={(key) => handleMinuteChange(parseInt(key as string))}
               >
-                {Array.from({ length: 60 }, (_, i) => i).map((m) => (
-                  <option key={m} value={m}>{m.toString().padStart(2, "0")}</option>
-                ))}
-              </select>
+                <Select.Trigger>
+                  <Select.Value placeholder="Select minute" className="rounded-xl!" />
+                </Select.Trigger>
+                <Select.Content>
+                  {Array.from({ length: 60 }, (_, i) => i).map((m) => (
+                    <Select.Item key={m} value={m.toString()}>{m.toString().padStart(2, "0")}</Select.Item>
+                  ))}
+                </Select.Content>
+              </Select>
             </div>
           </div>
         </div>
@@ -525,7 +563,7 @@ function FileChangeConfig({
       <div>
         <label className="text-xs font-semibold block text-foreground-400">Change Type</label>
         <Select
-          defaultSelectedKey={trigger?.changeType ?? "all"}
+          selectedKey={trigger?.changeType ?? "all"}
           valueLabel={trigger?.changeType ?? "all"}
           onSelectionChange={(key) => onConfigChange({ changeType: key as string })}
         >
@@ -562,7 +600,7 @@ function HttpRequestConfig({
       <div>
         <label className="text-xs font-semibold block text-foreground-400">HTTP Method</label>
         <Select
-          defaultSelectedKey={method}
+          selectedKey={method}
           valueLabel={method}
           onSelectionChange={(key) => onConfigChange({ httpMethod: key as string })}
         >
@@ -600,11 +638,11 @@ export function TriggerNodeConfig({
   onConfigChange,
 }: TriggerNodeConfigProps) {
   return (
-    <div className="flex flex-col gap-3 p-3">
+    <div className="p-2 flex flex-col gap-3">
       <div>
         <label className="text-xs font-semibold block mb-1">Trigger Type</label>
         <Select
-          defaultSelectedKey={triggerType}
+          selectedKey={triggerType}
           valueLabel={triggerType}
           onSelectionChange={(key) => onTypeChange(key as string)}
         >

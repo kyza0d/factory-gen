@@ -126,6 +126,15 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
     deleteEdge({ id: edgeId }).catch(console.error);
   }, [deleteEdge]);
 
+  const handleDetachNode = React.useCallback(async (nodeId: string) => {
+    if (!edges) return;
+    const connected = edges.filter(
+      (e: { id: string; source: string; target: string }) =>
+        e.source === nodeId || e.target === nodeId
+    );
+    await Promise.all(connected.map((e: { id: string }) => deleteEdge({ id: e.id })));
+  }, [edges, deleteEdge]);
+
   const handleModuleValueChange = React.useCallback(async (
     nodeId: string,
     moduleId: string,
@@ -237,6 +246,7 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
             isSelected={selectedNodeId === node.id}
             onSelect={setSelectedNodeId}
             onDelete={(nodeId) => deleteNode({ id: nodeId })}
+            onDetach={handleDetachNode}
           />
         ))}
 
@@ -338,6 +348,10 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
         node={configNode as any}
         onSave={handleModalSave}
         onClose={() => setConfigNodeId(null)}
+        trigger={configNode?.type === "Trigger"
+          ? (triggers?.find((t: any) => t.nodeId === configNode.id) ?? null)
+          : null}
+        onTriggerUpdate={handleTriggerUpdate}
       />
 
       {nodes === undefined && (
