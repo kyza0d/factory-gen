@@ -22,6 +22,7 @@ export const InputMetadata: NodeMetadata = {
       type: "text",
       label: "User Input",
       value: "Default User Input",
+      enabled: true,
     },
   ],
 };

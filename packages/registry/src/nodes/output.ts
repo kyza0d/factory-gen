@@ -22,6 +22,7 @@ export const OutputMetadata: NodeMetadata = {
       type: "text",
       label: "Preview Result",
       value: null,
+      enabled: true,
     },
   ],
 };

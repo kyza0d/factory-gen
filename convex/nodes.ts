@@ -35,7 +35,13 @@ export const createNode = mutation({
     uiComponent: v.optional(v.union(v.string(), v.null())),
     position: v.optional(v.object({ x: v.number(), y: v.number() })),
     workflowId: v.optional(v.string()),
-    modules: v.optional(v.union(v.array(v.object({ id: v.string(), type: v.string(), label: v.string(), value: v.optional(v.union(v.string(), v.null())) })), v.null())),
+    modules: v.optional(v.union(v.array(v.object({ 
+      id: v.string(), 
+      type: v.string(), 
+      label: v.string(), 
+      value: v.optional(v.union(v.string(), v.null())),
+      enabled: v.boolean(),
+    })), v.null())),
   },
   handler: async (ctx, args) => {
     if (args.workflowId) {
@@ -50,8 +56,34 @@ export const createNode = mutation({
       }
     }
 
+    const meta = NodeRegistry[args.type];
+    
+    // Merge modules with registry defaults
+    const finalModules = meta?.modules?.map(m => {
+      const existing = args.modules?.find(am => am.type === m.type && am.label === m.label);
+      return {
+        id: existing?.id ?? (typeof crypto !== "undefined" ? crypto.randomUUID() : Math.random().toString(36).substring(2)),
+        type: m.type,
+        label: m.label,
+        value: existing?.value ?? m.value ?? null,
+        enabled: existing?.enabled ?? m.enabled ?? true
+      };
+    }) ?? args.modules ?? null;
+
+    // Merge parameters with registry defaults
+    const finalParameters = (meta?.parameters ?? args.parameters ?? []).map(p => {
+      const existing = args.parameters?.find(ap => ap.id === p.id);
+      return {
+        ...p,
+        enabled: existing?.enabled ?? true,
+        defaultValue: existing?.defaultValue ?? p.defaultValue
+      };
+    });
+
     const nodeId = await ctx.db.insert("nodes", {
       ...args,
+      modules: finalModules as any,
+      parameters: finalParameters,
     });
     return nodeId;
   },
@@ -182,8 +214,34 @@ export const createWorkflowHandler = async (ctx: MutationCtx, args: {
 
   // Insert all nodes
   for (const node of workflow.nodes) {
+    const meta = NodeRegistry[node.type];
+    
+    // Merge modules with registry defaults
+    const finalModules = meta?.modules?.map(m => {
+      const existing = node.modules?.find((am: any) => am.type === m.type && am.label === m.label);
+      return {
+        id: existing?.id ?? (typeof crypto !== "undefined" ? crypto.randomUUID() : Math.random().toString(36).substring(2)),
+        type: m.type,
+        label: m.label,
+        value: existing?.value ?? m.value ?? null,
+        enabled: existing?.enabled ?? m.enabled ?? true
+      };
+    }) ?? node.modules ?? null;
+
+    // Merge parameters with registry defaults
+    const finalParameters = (meta?.parameters ?? node.parameters ?? []).map((p: any) => {
+      const existing = node.parameters?.find((ap: any) => ap.id === p.id);
+      return {
+        ...p,
+        enabled: existing?.enabled ?? true,
+        defaultValue: existing?.defaultValue ?? p.defaultValue
+      };
+    });
+
     await ctx.db.insert("nodes", {
       ...node,
+      modules: finalModules,
+      parameters: finalParameters,
       workflowId: workflow.id,
     });
   }
@@ -250,7 +308,13 @@ export const updateNode = mutation({
       outputs: v.optional(v.array(v.any())),
       parameters: v.optional(v.array(v.any())),
       position: v.optional(v.object({ x: v.number(), y: v.number() })),
-      modules: v.optional(v.array(v.object({ id: v.string(), type: v.string(), label: v.string(), value: v.optional(v.any()) }))),
+      modules: v.optional(v.array(v.object({ 
+        id: v.string(), 
+        type: v.string(), 
+        label: v.string(), 
+        value: v.optional(v.any()),
+        enabled: v.boolean(),
+      }))),
     }),
   },
   handler: async (ctx, args) => {

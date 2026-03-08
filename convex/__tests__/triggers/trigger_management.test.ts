@@ -255,6 +255,33 @@ describe("updateTriggerHandler", () => {
     );
   });
 
+  it("can update trigger type", async () => {
+    const trigger = { _id: "trigger-db-1", workflowId: "wf-1", type: "webhook" };
+    const mockCtx = {
+      db: {
+        query: vi.fn().mockReturnValue({
+          filter: vi.fn().mockReturnValue({
+            first: vi.fn().mockResolvedValue(trigger),
+          }),
+        }),
+        patch: vi.fn(),
+      },
+    } as unknown as MutationCtx;
+
+    await updateTriggerHandler(mockCtx, {
+      triggerId: "trigger-db-1",
+      config: { type: "cron", cronExpression: "0 0 * * *" },
+    });
+
+    expect(mockCtx.db.patch).toHaveBeenCalledWith(
+      "trigger-db-1",
+      expect.objectContaining({
+        type: "cron",
+        cronExpression: "0 0 * * *",
+      })
+    );
+  });
+
   it("throws when trigger not found", async () => {
     const mockCtx = {
       db: {

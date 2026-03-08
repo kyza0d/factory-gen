@@ -43,6 +43,7 @@ export const generateNodeHandler = async (_ctx: ActionCtx, args: { prompt: strin
       - A descriptive 'label'.
       - A default value for all new nodes unless otherwise specified.
       - Appropriate 'inputs', 'outputs', 'parameters', and 'modules' (if the node contains internal components like text inputs) matching the definition of the chosen type.
+      - Each parameter and module should have an 'enabled' boolean field (set to true by default unless specified otherwise).
       - A 'uiComponent' name that matches the node type (PascalCase).`,
     });
 
@@ -100,7 +101,7 @@ export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: s
       - Space nodes horizontally by ~300 pixels (e.g., 350, 650, etc.).
       - Space nodes vertically if there are branches.
 
-      Ensure each node has a unique UUID.`,
+      Ensure each node has a unique UUID and that all parameters and modules have an 'enabled' boolean field set to true.`,
     });
     if (args.workflowId) {
       output.id = args.workflowId;
@@ -234,10 +235,18 @@ export const executeWorkflowHandler = async (
 
       const nodeDefinition = NodeRegistry[node.type];
       if (nodeDefinition) {
+        // ========== NEW: Get configured parameter values ==========
+        const paramConfigs = await ctx.runQuery(internal.node_configuration.getNodeParameterConfigs, {
+          nodeId: node.id
+        });
+
         const params: Record<string, any> = {};
         node.parameters?.forEach((p: IOParam) => {
-          params[p.name] = p.defaultValue;
+          // Use configured value if it exists, otherwise use default
+          const config = paramConfigs.find((c) => c.paramId === p.id);
+          params[p.name] = config?.configuredValue ?? p.defaultValue;
         });
+        // ========== END NEW ==========
 
         output = await nodeDefinition.execute(ctx, {
           inputs,

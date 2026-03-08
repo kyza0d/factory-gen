@@ -10,6 +10,7 @@
 
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as node_configuration from "../node_configuration.js";
 import type * as node_types_AI_index from "../node_types/AI/index.js";
 import type * as node_types_Input_index from "../node_types/Input/index.js";
 import type * as node_types_Output_index from "../node_types/Output/index.js";
@@ -30,6 +31,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   files: typeof files;
   http: typeof http;
+  node_configuration: typeof node_configuration;
   "node_types/AI/index": typeof node_types_AI_index;
   "node_types/Input/index": typeof node_types_Input_index;
   "node_types/Output/index": typeof node_types_Output_index;

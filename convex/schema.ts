@@ -23,7 +23,13 @@ export default defineSchema({
       y: v.number(),
     })),
     workflowId: v.optional(v.string()), // ID of the workflow it belongs to
-    modules: v.optional(v.union(v.array(v.object({ id: v.string(), type: v.string(), label: v.string(), value: v.optional(v.union(v.string(), v.null())) })), v.null())),
+    modules: v.optional(v.union(v.array(v.object({ 
+      id: v.string(), 
+      type: v.string(), 
+      label: v.string(), 
+      value: v.optional(v.union(v.string(), v.null())),
+      enabled: v.boolean(),
+    })), v.null())),
   })
     .index("by_workflowId", ["workflowId"])
     .index("by_workflowId_nodeId", ["workflowId", "id"]),
@@ -102,4 +108,16 @@ export default defineSchema({
   })
     .index("by_triggerId", ["triggerId"])
     .index("by_workflowId", ["workflowId"]),
+
+  node_parameter_configs: defineTable({
+    nodeId: v.string(),
+    paramId: v.string(),
+    configuredValue: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+    validated: v.boolean(),
+    validationErrors: v.array(v.string()),
+  })
+    .index("by_nodeId", ["nodeId"])
+    .index("by_nodeId_paramId", ["nodeId", "paramId"]),
 });

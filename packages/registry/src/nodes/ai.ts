@@ -33,6 +33,7 @@ export const AIMetadata: NodeMetadata = {
       description: "Instructions for the AI",
       defaultValue: "You are a helpful AI.",
       options: null,
+      enabled: true,
     },
     {
       id: "ai-param-2",
@@ -41,6 +42,7 @@ export const AIMetadata: NodeMetadata = {
       description: "The LLM to use",
       defaultValue: "gpt-4o",
       options: ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
+      enabled: true,
     },
   ],
   modules: [],

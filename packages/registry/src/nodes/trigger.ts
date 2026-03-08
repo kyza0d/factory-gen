@@ -32,6 +32,7 @@ export const TriggerMetadata: NodeMetadata = {
       description: "Type of automation trigger",
       defaultValue: "webhook",
       options: ["webhook", "cron", "fileChange", "httpRequest"],
+      enabled: true,
     },
     {
       id: "trigger-config-param",
@@ -40,6 +41,7 @@ export const TriggerMetadata: NodeMetadata = {
       description: "JSON configuration specific to trigger type",
       defaultValue: "{}",
       options: null,
+      enabled: true,
     },
   ],
   modules: [
@@ -47,11 +49,13 @@ export const TriggerMetadata: NodeMetadata = {
       type: "badge",
       label: "Status",
       value: "listening",
+      enabled: true,
     },
     {
       type: "text",
       label: "Last Event",
       value: null,
+      enabled: true,
     },
   ],
 };

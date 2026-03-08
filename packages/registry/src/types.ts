@@ -15,6 +15,7 @@ export const IOParamSchema = z.object({
   description: z.string().describe("Brief explanation of the I/O or parameter."),
   defaultValue: z.union([z.string(), z.number(), z.boolean()]).nullable().describe("Optional default value for parameters (as string, number, boolean, or null)."),
   options: z.array(z.string()).nullable().describe("Optional list of choices for dropdowns/enums (or null)."),
+  enabled: z.boolean().optional().describe("Whether the parameter is currently enabled for this node instance."),
 });
 
 export const NodeExecutionStatusSchema = z.enum(["idle", "pending", "success", "warning", "danger"]);
@@ -24,6 +25,7 @@ export const NodeModuleSchema = z.object({
   type: z.string().describe("Type of the module (e.g., 'text', 'image')."),
   label: z.string().describe("Display label for the module."),
   value: z.string().nullable().describe("Actual content or value of the module (as string or null)."),
+  enabled: z.boolean().describe("Whether the module is currently enabled for this node instance."),
 });
 
 /**
@@ -59,6 +61,7 @@ export const NodeMetadataSchema = z.object({
     type: z.string(),
     label: z.string(),
     value: z.string().nullable().optional(),
+    enabled: z.boolean().optional(),
   })).optional(),
   uiComponent: z.string().optional(),
 });

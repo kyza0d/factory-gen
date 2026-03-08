@@ -59,7 +59,7 @@ export const updateTriggerHandler = async (
   const updates: Record<string, any> = { updatedAt: Date.now() };
 
   const fields = [
-    "cronExpression", "timezone", "watchPath", "filePattern",
+    "type", "cronExpression", "timezone", "watchPath", "filePattern",
     "changeType", "webhookSecret", "enabled", "httpMethod",
   ];
   for (const field of fields) {
