@@ -83,7 +83,14 @@ export default defineSchema({
     filePattern: v.optional(v.string()),
     changeType: v.optional(v.string()),
     // HTTP fields
-    httpMethod: v.optional(v.union(v.literal("GET"), v.literal("POST"))),
+    httpMethod: v.optional(v.union(
+      v.literal("GET"),
+      v.literal("POST"),
+      v.literal("PUT"),
+      v.literal("PATCH"),
+      v.literal("DELETE"),
+    )),
+    httpAuthSecret: v.optional(v.string()),
     // Common
     enabled: v.boolean(),
     createdAt: v.number(),
@@ -109,6 +116,39 @@ export default defineSchema({
     createdAt: v.number(),
   })
     .index("by_triggerId", ["triggerId"])
+    .index("by_workflowId", ["workflowId"]),
+
+  workflowGenerations: defineTable({
+    workflowId: v.string(),
+    status: v.union(
+      v.literal("generating"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    totalSteps: v.number(),
+    completedSteps: v.number(),
+    prompt: v.string(),
+    error: v.optional(v.string()),
+  }).index("by_workflowId", ["workflowId"]),
+
+  generationSteps: defineTable({
+    generationId: v.string(),
+    workflowId: v.string(),
+    stepIndex: v.number(),
+    title: v.string(),
+    description: v.string(),
+    nodeType: v.string(),
+    suggestedLabel: v.string(),
+    status: v.union(
+      v.literal("pending"),
+      v.literal("generating"),
+      v.literal("completed"),
+      v.literal("failed"),
+    ),
+    nodeId: v.optional(v.string()),
+    error: v.optional(v.string()),
+  })
+    .index("by_generationId", ["generationId"])
     .index("by_workflowId", ["workflowId"]),
 
   node_parameter_configs: defineTable({

@@ -20,6 +20,7 @@ import type * as nodes from "../nodes.js";
 import type * as schema_nodes from "../schema/nodes.js";
 import type * as triggers from "../triggers.js";
 import type * as workflow_actions from "../workflow_actions.js";
+import type * as workflow_generation from "../workflow_generation.js";
 import type * as workspaces from "../workspaces.js";
 
 import type {
@@ -41,6 +42,7 @@ declare const fullApi: ApiFromModules<{
   "schema/nodes": typeof schema_nodes;
   triggers: typeof triggers;
   workflow_actions: typeof workflow_actions;
+  workflow_generation: typeof workflow_generation;
   workspaces: typeof workspaces;
 }>;
 

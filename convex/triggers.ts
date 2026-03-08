@@ -37,6 +37,9 @@ export const createTriggerHandler = async (
     triggerData.changeType = args.config.changeType ?? "all";
   } else if (args.type === "httpRequest") {
     triggerData.httpMethod = args.config.method ?? "POST";
+    if (args.config.authSecret !== undefined) {
+      triggerData.httpAuthSecret = args.config.authSecret;
+    }
   }
 
   return await ctx.db.insert("triggers", triggerData);
@@ -60,7 +63,7 @@ export const updateTriggerHandler = async (
 
   const fields = [
     "type", "cronExpression", "timezone", "watchPath", "filePattern",
-    "changeType", "webhookSecret", "enabled", "httpMethod",
+    "changeType", "webhookSecret", "enabled", "httpMethod", "httpAuthSecret",
   ];
   for (const field of fields) {
     if (args.config[field] !== undefined) {
