@@ -1,7 +1,7 @@
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
-import { describe, it, expect, vi, beforeEach } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { NodeConfigModal } from "./node-config-modal";
-import { UINode } from "@registry/types";
+import { NodeModule, UINode } from "@registry/types";
 
 // Mock Convex hooks
 const { mockUseMutation } = vi.hoisted(() => ({
@@ -40,12 +40,22 @@ const makeNode = (overrides: Partial<UINode> = {}): UINode => ({
   modules: null,
   parameters: [
     {
+      id: "param-provider",
+      name: "provider",
+      type: "string",
+      description: "Model provider",
+      defaultValue: "openai",
+      options: ["openai", "anthropic", "google", "openrouter"],
+      enabled: true,
+    },
+    {
       id: "param-model",
       name: "model",
       type: "string",
       description: "AI model to use",
-      defaultValue: "gpt-4",
-      options: ["gpt-4", "gpt-3.5-turbo"],
+      defaultValue: "gpt-5",
+      options: ["gpt-5", "gpt-5-mini", "claude-sonnet-4-5", "gemini-2.5-flash", "openai/gpt-5"],
+      enabled: true,
     },
     {
       id: "param-prompt",
@@ -54,19 +64,50 @@ const makeNode = (overrides: Partial<UINode> = {}): UINode => ({
       description: "Prompt template",
       defaultValue: "Summarize: {{input}}",
       options: null,
+      enabled: true,
     },
   ],
   ...overrides,
 });
 
+const makeModule = (overrides: Partial<NodeModule> = {}): NodeModule => ({
+  id: "module-1",
+  type: "text",
+  label: "Summary",
+  value: "Generated summary",
+  enabled: true,
+  ...overrides,
+});
+
 describe("NodeConfigModal", () => {
-  it("renders the node label as the modal title", () => {
+  it("renders the node type label and node label in the modal title", () => {
     render(
       <NodeConfigModal node={makeNode()} onSave={vi.fn()} onClose={vi.fn()} />
     );
 
-    // Use getByRole to target the modal title specifically (usually an h4 in this project)
     expect(screen.getByRole("heading", { name: "My AI Node" })).toBeInTheDocument();
+    expect(screen.getByText("AI Processing")).toBeInTheDocument();
+  });
+
+  it("supports overriding modal and tab titles through copy config", () => {
+    render(
+      <NodeConfigModal
+        node={makeNode()}
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+        copy={{
+          parametersTabTitle: "Settings",
+          modulesTabTitle: "Outputs",
+          formatModalTitle: (node, typeLabel) => `${node.label} (${typeLabel})`,
+          formatIdentityBadgeLabel: () => "Configured Node",
+        }}
+      />
+    );
+
+    expect(screen.getByRole("heading", { name: "My AI Node (AI Processing)" })).toBeInTheDocument();
+    expect(screen.getByText("Configured Node")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /settings \(3\)/i })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: /outputs \(0\)/i })).toBeInTheDocument();
   });
 
   it("renders a field for each parameter", () => {
@@ -101,7 +142,8 @@ describe("NodeConfigModal", () => {
 
     await waitFor(() => {
       expect(onSave).toHaveBeenCalledWith({
-        "param-model": "gpt-4",
+        "param-provider": "openai",
+        "param-model": "gpt-5",
         "param-prompt": "New prompt",
       });
     });
@@ -126,7 +168,9 @@ describe("NodeConfigModal", () => {
     );
 
     // The UI library renders this as a button with the current value as its name.
-    const modelSelect = screen.getByRole("button", { name: /gpt-4/i });
+    const providerSelect = screen.getByRole("button", { name: /openai/i });
+    const modelSelect = screen.getByRole("button", { name: /gpt-5/i });
+    expect(providerSelect).toBeInTheDocument();
     expect(modelSelect).toBeInTheDocument();
   });
 
@@ -146,5 +190,22 @@ describe("NodeConfigModal", () => {
     );
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("shows the module type as the primary title and the module label as secondary metadata", async () => {
+    render(
+      <NodeConfigModal
+        node={makeNode({ modules: [makeModule()] })}
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole("tab", { name: /modules \(1\)/i }));
+
+    await waitFor(() => {
+      expect(screen.getByText("Text")).toBeInTheDocument();
+      expect(screen.getByText("Summary")).toBeInTheDocument();
+    });
   });
 });

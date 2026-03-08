@@ -3,9 +3,19 @@
 import React, { useState } from "react";
 import { useMutation } from "convex/react";
 import { api } from "@convex/_generated/api";
-import { Modal, ModalFooter, Button, Input, Label, Select, Badge, Switch, Divider, Tabs, TabsList, TabsTrigger, TabsContent, Card } from "ui-lab-components";
+import { Modal, ModalFooter, Button, Input, Label, Select, Badge, Switch, Tabs, TabsList, TabsTrigger, TabsContent } from "ui-lab-components";
 import { UINode, IOParam, NodeModule } from "@registry/types";
-import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaRegTrashCan, FaRegImage, FaQuestion, FaBolt, FaPlus, FaClock } from "react-icons/fa6";
+import { NodeMetadataRegistry } from "@registry/nodes";
+import {
+  AI_PROVIDER_CATALOG,
+  DEFAULT_AI_PROVIDER,
+  getDefaultModelForProvider,
+  getModelGroupForProvider,
+  getModelLabel,
+  getProviderDefinition,
+  isAIProvider,
+} from "@registry/ai/models";
+import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaRegTrashCan, FaRegImage, FaQuestion, FaBolt } from "react-icons/fa6";
 import { TriggerNodeConfig } from "./trigger-node-config";
 
 const nodeTypeIcons: Record<string, React.ElementType> = {
@@ -25,10 +35,36 @@ interface NodeConfigModalProps {
   onClose: () => void;
   trigger?: Record<string, any> | null;
   onTriggerUpdate?: (triggerId: string, config: Record<string, any>) => void;
+  copy?: Partial<NodeConfigModalCopy>;
 }
 
-export function NodeConfigModal({ node, onSave, onClose, trigger, onTriggerUpdate }: NodeConfigModalProps) {
-  const [values, setValues] = useState<Record<string, unknown>>(
+interface NodeConfigModalCopy {
+  parametersTabTitle: string;
+  modulesTabTitle: string;
+  formatModalTitle: (node: UINode, nodeTypeLabel: string) => string;
+  formatIdentityBadgeLabel: (node: UINode, nodeTypeLabel: string) => string;
+  formatModuleHeading: (module: NodeModule) => string;
+}
+
+const DEFAULT_COPY: NodeConfigModalCopy = {
+  parametersTabTitle: "Parameters",
+  modulesTabTitle: "Modules",
+  formatModalTitle: (node) => node.label,
+  formatIdentityBadgeLabel: (_node, nodeTypeLabel) => nodeTypeLabel,
+  formatModuleHeading: (module) => toDisplayCase(module.type),
+};
+
+function toDisplayCase(value: string) {
+  return value
+    .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/\b\w/g, (char) => char.toUpperCase());
+}
+
+export function NodeConfigModal({ node, onSave, onClose, trigger, onTriggerUpdate, copy }: NodeConfigModalProps) {
+  const [values, setValues] = useState<Record<string, unknown>>(() =>
     Object.fromEntries(
       (node?.parameters ?? []).map((p: IOParam) => [p.id, p.defaultValue ?? ""])
     )
@@ -161,16 +197,46 @@ export function NodeConfigModal({ node, onSave, onClose, trigger, onTriggerUpdat
     }
   };
 
-  const saveIsDisabled = attemptedSave && hasErrors(fieldErrors);
-
   const modules = (node?.modules ?? []) as NodeModule[];
   const parameters = (node?.parameters ?? []) as IOParam[];
+  const aiProviderParam = node?.type === "AI"
+    ? parameters.find((param) => param.name === "provider")
+    : undefined;
+  const aiModelParam = node?.type === "AI"
+    ? parameters.find((param) => param.name === "model")
+    : undefined;
+  const selectedAIProvider = (() => {
+    if (!aiProviderParam) return DEFAULT_AI_PROVIDER;
+    const rawProvider = values[aiProviderParam.id] ?? aiProviderParam.defaultValue;
+    const requestedProvider = typeof rawProvider === "string" ? rawProvider : undefined;
+    return isAIProvider(requestedProvider)
+      ? requestedProvider
+      : DEFAULT_AI_PROVIDER;
+  })();
+  const selectedProviderDefinition = getProviderDefinition(selectedAIProvider);
+  const selectedAIModelValue = (param: IOParam) => {
+    const rawValue = values[param.id] ?? param.defaultValue ?? getDefaultModelForProvider(selectedAIProvider);
+    return typeof rawValue === "string" ? rawValue : getDefaultModelForProvider(selectedAIProvider);
+  };
+  const resolvedCopy = { ...DEFAULT_COPY, ...copy };
+  const nodeTypeLabel = node ? NodeMetadataRegistry[node.type]?.label ?? toDisplayCase(node.type) : "";
+  const modalTitle = node ? resolvedCopy.formatModalTitle(node, nodeTypeLabel) : undefined;
+  const identityBadgeLabel = node ? resolvedCopy.formatIdentityBadgeLabel(node, nodeTypeLabel) : "";
+
+  const handleAIProviderChange = async (providerId: string) => {
+    const nextProvider = isAIProvider(providerId) ? providerId : DEFAULT_AI_PROVIDER;
+    await handleChange(aiProviderParam?.id ?? "provider", nextProvider);
+
+    if (aiModelParam) {
+      await handleChange(aiModelParam.id, getDefaultModelForProvider(nextProvider));
+    }
+  };
 
   return (
     <Modal
       isOpen={node !== null}
       onOpenChange={(open) => { if (!open) onClose(); }}
-      title={node?.label}
+      title={modalTitle}
       closeButton
       className="h-120"
       footer={
@@ -201,7 +267,7 @@ export function NodeConfigModal({ node, onSave, onClose, trigger, onTriggerUpdat
             const IconComponent = nodeTypeIcons[node.type] || nodeTypeIcons.default;
             return (
               <Badge icon={<IconComponent className="text-foreground-400" />} size="sm" className="bg-background-600">
-                {node.label}
+                {identityBadgeLabel}
               </Badge>
             );
           })()}
@@ -211,8 +277,8 @@ export function NodeConfigModal({ node, onSave, onClose, trigger, onTriggerUpdat
       {/* Tabs for Parameters and Modules */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-4">
         <TabsList aria-label="Configuration sections" className="rounded-none border-b border-background-700">
-          <TabsTrigger value="parameters">Parameters ({parameters.length})</TabsTrigger>
-          <TabsTrigger value="modules">Modules ({modules.length})</TabsTrigger>
+          <TabsTrigger value="parameters">{resolvedCopy.parametersTabTitle} ({parameters.length})</TabsTrigger>
+          <TabsTrigger value="modules">{resolvedCopy.modulesTabTitle} ({modules.length})</TabsTrigger>
         </TabsList>
 
         {/* Parameters Tab Content */}
@@ -267,7 +333,77 @@ export function NodeConfigModal({ node, onSave, onClose, trigger, onTriggerUpdat
 
                   {isEnabled && (
                     <div className="mt-2">
-                      {param.options ? (
+                      {node?.type === "AI" && param.name === "provider" ? (
+                        <>
+                          <Select
+                            selectedKey={selectedAIProvider}
+                            valueLabel={selectedProviderDefinition?.label ?? selectedAIProvider}
+                            onSelectionChange={(key) => handleAIProviderChange(String(key))}
+                            className="w-full"
+                          >
+                            <Select.Trigger>
+                              <Select.Value placeholder="Select a provider" />
+                            </Select.Trigger>
+                            <Select.Content>
+                              {AI_PROVIDER_CATALOG.map((provider) => (
+                                <Select.Item
+                                  key={provider.id}
+                                  value={provider.id}
+                                  textValue={provider.label}
+                                  description={provider.description}
+                                >
+                                  {provider.label}
+                                </Select.Item>
+                              ))}
+                            </Select.Content>
+                          </Select>
+                          {selectedProviderDefinition && (
+                            <p className="mt-2 text-xs text-foreground-500">
+                              Model list source:{" "}
+                              <a
+                                href={selectedProviderDefinition.sourceUrl}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-info-400 underline underline-offset-2"
+                              >
+                                {selectedProviderDefinition.sourceLabel}
+                              </a>
+                            </p>
+                          )}
+                        </>
+                      ) : node?.type === "AI" && param.name === "model" ? (
+                        <Select
+                          selectedKey={selectedAIModelValue(param)}
+                          valueLabel={getModelLabel(selectedAIModelValue(param))}
+                          onSelectionChange={(key) => handleChange(param.id, key)}
+                          className="w-full"
+                        >
+                          <Select.Trigger>
+                            <Select.Value placeholder="Select a model" />
+                          </Select.Trigger>
+                          <Select.Content searchable searchPlaceholder={`Search ${selectedProviderDefinition?.label ?? "provider"} models...`}>
+                            {(getModelGroupForProvider(selectedAIProvider)?.series ?? []).map((series) => (
+                              <Select.Sub key={series.id}>
+                                <Select.SubTrigger textValue={series.label}>
+                                  {series.label}
+                                </Select.SubTrigger>
+                                <Select.SubContent>
+                                  {series.models.map((model) => (
+                                    <Select.Item
+                                      key={model.id}
+                                      value={model.id}
+                                      textValue={model.label}
+                                      description={model.description}
+                                    >
+                                      {model.label}
+                                    </Select.Item>
+                                  ))}
+                                </Select.SubContent>
+                              </Select.Sub>
+                            ))}
+                          </Select.Content>
+                        </Select>
+                      ) : param.options ? (
                         <Select
                           selectedKey={String(values[param.id] ?? param.defaultValue ?? "")}
                           valueLabel={String(values[param.id] ?? param.defaultValue ?? "")}
@@ -368,8 +504,10 @@ export function NodeConfigModal({ node, onSave, onClose, trigger, onTriggerUpdat
                       <div className="flex items-start justify-between mb-2">
                         <div>
                           <div className="flex items-center gap-2">
-                            <p className="text-sm font-semibold text-foreground-900">{module.label}</p>
-                            <Badge size="sm" variant="default">{module.type}</Badge>
+                            <p className="text-sm font-semibold text-foreground-900">
+                              {resolvedCopy.formatModuleHeading(module)}
+                            </p>
+                            <Badge size="sm" variant="default">{module.label}</Badge>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
