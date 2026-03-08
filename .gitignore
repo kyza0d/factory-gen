@@ -7,3 +7,5 @@ dist
 # AI Stuff
 .prompts/
 .reports/
+.codex/
+research/
