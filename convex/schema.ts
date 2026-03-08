@@ -23,10 +23,10 @@ export default defineSchema({
       y: v.number(),
     })),
     workflowId: v.optional(v.string()), // ID of the workflow it belongs to
-    modules: v.optional(v.union(v.array(v.object({ 
-      id: v.string(), 
-      type: v.string(), 
-      label: v.string(), 
+    modules: v.optional(v.union(v.array(v.object({
+      id: v.string(),
+      type: v.string(),
+      label: v.string(),
       value: v.optional(v.union(v.string(), v.null())),
       enabled: v.boolean(),
     })), v.null())),
@@ -41,9 +41,11 @@ export default defineSchema({
     fileId: v.optional(v.id("files")),
     workspaceId: v.optional(v.string()), // ID of the workspace it belongs to
     status: v.optional(v.union(v.literal("running"), v.literal("completed"), v.literal("failed"), v.literal("idle"))),
+    isGlobal: v.optional(v.boolean()),
   })
     .index("by_fileId", ["fileId"])
-    .index("by_workspaceId", ["workspaceId"]),
+    .index("by_workspaceId", ["workspaceId"])
+    .index("by_isGlobal", ["isGlobal"]),
 
   files: defineTable({
     name: v.string(),

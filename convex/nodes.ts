@@ -452,9 +452,32 @@ export const renameWorkflow = mutation({
   args: { id: v.string(), name: v.string() },
   handler: renameWorkflowHandler,
 });
+/**
+ * Handler for toggling a workflow's global status.
+ * Extracted for testing.
+ */
+export const toggleGlobalWorkflowHandler = async (
+  ctx: MutationCtx,
+  args: { id: string; isGlobal: boolean }
+) => {
+  const workflow = await ctx.db
+    .query("workflows")
+    .filter((q) => q.eq(q.field("id"), args.id))
+    .first();
+
+  if (!workflow) throw new Error("Workflow not found");
+
+  await ctx.db.patch(workflow._id, { isGlobal: args.isGlobal });
+};
+
+export const toggleGlobalWorkflow = mutation({
+  args: { id: v.string(), isGlobal: v.boolean() },
+  handler: toggleGlobalWorkflowHandler,
+});
 
 /**
  * Handler for deleting a workflow with cascade delete.
+...
  * Cascade order: nodes → edges → workflow record.
  * Extracted for testing.
  */

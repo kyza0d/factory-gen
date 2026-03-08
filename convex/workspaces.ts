@@ -139,22 +139,40 @@ export const getWorkflowsByWorkspaceHandler = async (
     .withIndex("by_workspaceId", (q) => q.eq("workspaceId", args.workspaceId))
     .collect();
 
+  // Get global workflows
+  const globalWorkflows = await ctx.db
+    .query("workflows")
+    .withIndex("by_isGlobal", (q) => q.eq("isGlobal", true))
+    .collect();
+
   // Check if this is the default workspace
   const workspace = await ctx.db
     .query("workspaces")
     .filter((q) => q.eq(q.field("id"), args.workspaceId))
     .first();
 
+  let workflowsWithoutWorkspace: any[] = [];
   if (workspace?.isDefault) {
     // For the default workspace, also include workflows without a workspaceId (backward compatibility)
     const allWorkflows = await ctx.db.query("workflows").collect();
-    const workflowsWithoutWorkspace = allWorkflows.filter(
-      (w) => !w.workspaceId
+    workflowsWithoutWorkspace = allWorkflows.filter(
+      (w) => !w.workspaceId && !w.isGlobal
     );
-    return [...workflowsWithWorkspace, ...workflowsWithoutWorkspace];
   }
 
-  return workflowsWithWorkspace;
+  // Combine and de-duplicate by 'id' (external UUID)
+  const combined = [
+    ...workflowsWithWorkspace,
+    ...globalWorkflows,
+    ...workflowsWithoutWorkspace,
+  ];
+
+  const seen = new Set();
+  return combined.filter((w) => {
+    if (seen.has(w.id)) return false;
+    seen.add(w.id);
+    return true;
+  });
 };
 
 export const getWorkflowsByWorkspace = query({
