@@ -10,8 +10,11 @@
 
 import type * as files from "../files.js";
 import type * as http from "../http.js";
+import type * as lib_openrouter from "../lib/openrouter.js";
 import type * as node_configuration from "../node_configuration.js";
+import type * as node_types_AI_config from "../node_types/AI/config.js";
 import type * as node_types_AI_index from "../node_types/AI/index.js";
+import type * as node_types_AI_provider from "../node_types/AI/provider.js";
 import type * as node_types_Input_index from "../node_types/Input/index.js";
 import type * as node_types_Output_index from "../node_types/Output/index.js";
 import type * as node_types_Trigger_index from "../node_types/Trigger/index.js";
@@ -32,8 +35,11 @@ import type {
 declare const fullApi: ApiFromModules<{
   files: typeof files;
   http: typeof http;
+  "lib/openrouter": typeof lib_openrouter;
   node_configuration: typeof node_configuration;
+  "node_types/AI/config": typeof node_types_AI_config;
   "node_types/AI/index": typeof node_types_AI_index;
+  "node_types/AI/provider": typeof node_types_AI_provider;
   "node_types/Input/index": typeof node_types_Input_index;
   "node_types/Output/index": typeof node_types_Output_index;
   "node_types/Trigger/index": typeof node_types_Trigger_index;

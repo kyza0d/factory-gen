@@ -2,7 +2,7 @@ import { action, internalMutation, internalQuery, ActionCtx, QueryCtx } from "./
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { generateText, Output } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { openrouterMercury } from "./lib/openrouter";
 import { UINodeSchema, WorkflowGraphSchema, UINode, WorkflowGraph, IOParam, NodeExecutionStatus } from "@registry/types";
 import { NodeRegistry, ALL_NODES } from "./nodes";
 
@@ -18,9 +18,9 @@ export type ExecutionEvent = {
  * Generates a UI node configuration based on a user prompt.
  */
 export const generateNodeHandler = async (_ctx: ActionCtx, args: { prompt: string; workflowId?: string }): Promise<UINode> => {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured in Convex environment variables.");
+    throw new Error("OPENROUTER_API_KEY is not configured in Convex environment variables.");
   }
 
   const nodeTypesDescription = ALL_NODES.map(node =>
@@ -29,7 +29,7 @@ export const generateNodeHandler = async (_ctx: ActionCtx, args: { prompt: strin
 
   try {
     const { output } = await generateText({
-      model: openai("gpt-4o-2024-08-06"),
+      model: openrouterMercury("instant"),
       output: Output.object({ schema: UINodeSchema }),
       prompt: `Generate a Zod-safe JSON configuration for a UI node in a visual workflow editor.
       The user prompt is: "${args.prompt}"
@@ -66,9 +66,9 @@ export const generateNode = action({
  * Generates a complete workflow graph based on a user description.
  */
 export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: string; workflowId?: string }): Promise<WorkflowGraph> => {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) {
-    throw new Error("OPENAI_API_KEY is not configured in Convex environment variables.");
+    throw new Error("OPENROUTER_API_KEY is not configured in Convex environment variables.");
   }
 
   const nodeDefinitionsPrompt = ALL_NODES.map(node => {
@@ -83,7 +83,7 @@ export const generateWorkflowHandler = async (_ctx: ActionCtx, args: { prompt: s
 
   try {
     const { output } = await generateText({
-      model: openai("gpt-4o-2024-08-06"),
+      model: openrouterMercury("high"),
       output: Output.object({ schema: WorkflowGraphSchema }),
       prompt: `Generate a complete visual workflow graph based on the user's description: "${args.prompt}"
 

@@ -12,7 +12,7 @@ import {
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { generateText, Output } from "ai";
-import { openai } from "@ai-sdk/openai";
+import { openrouter } from "./lib/openrouter";
 import { z } from "zod";
 import { UINodeSchema, IOParam, NodeMetadata } from "@registry/types";
 import { ALL_NODES } from "./nodes";
@@ -400,8 +400,8 @@ export const initiateWorkflowGeneration = action({
     workflowId: v.string(),
   },
   handler: async (ctx: ActionCtx, args): Promise<{ generationId: string }> => {
-    const apiKey = process.env.OPENAI_API_KEY;
-    if (!apiKey) throw new Error("OPENAI_API_KEY is not configured.");
+    const apiKey = process.env.OPENROUTER_API_KEY;
+    if (!apiKey) throw new Error("OPENROUTER_API_KEY is not configured.");
 
     const nodeTypeList = ALL_NODES.map((n) => `- ${n.type}: ${n.description}`).join("\n");
 
@@ -409,7 +409,14 @@ export const initiateWorkflowGeneration = action({
     let plan: z.infer<typeof GenerationPlanSchema>;
     try {
       const { output } = await generateText({
-        model: openai("gpt-4o-2024-08-06"),
+        model: openrouter("inception/mercury-2"),
+        providerOptions: {
+          openai: {
+            extraBody: {
+              reasoning_effort: "instant",
+            },
+          },
+        },
         output: Output.object({ schema: GenerationPlanSchema }),
         prompt: `You are planning a visual workflow. Given the user's request, decide which nodes are needed.
 
@@ -518,7 +525,14 @@ export const generateNodeStep = internalAction({
 
     try {
       const { output } = await generateText({
-        model: openai("gpt-4o-2024-08-06"),
+        model: openrouter("inception/mercury-2"),
+        providerOptions: {
+          openai: {
+            extraBody: {
+              reasoning_effort: "instant",
+            },
+          },
+        },
         output: Output.object({ schema: UINodeSchema }),
         prompt: `Generate a UINode configuration for this workflow step.
 

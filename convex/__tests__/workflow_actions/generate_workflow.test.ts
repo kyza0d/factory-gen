@@ -64,11 +64,12 @@ vi.mock("ai", () => ({
 
 vi.mock("@ai-sdk/openai", () => ({
   openai: vi.fn(),
+  createOpenAI: vi.fn(() => vi.fn()),
 }));
 
 describe("AI Workflow Generation Convex Action", () => {
   beforeEach(() => {
-    vi.stubEnv("OPENAI_API_KEY", "test-key");
+    vi.stubEnv("OPENROUTER_API_KEY", "test-key");
   });
 
   afterEach(() => {

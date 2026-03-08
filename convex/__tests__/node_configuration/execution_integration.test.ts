@@ -31,8 +31,8 @@ describe("Execution Integration - Configuration Usage", () => {
         name: "model",
         type: "string",
         description: "Model choice",
-        defaultValue: "gpt-4o",
-        options: ["gpt-4o", "gpt-3.5-turbo"],
+        defaultValue: "inception/mercury-2",
+        options: ["inception/mercury-2", "gpt-3.5-turbo"],
         enabled: true,
       };
 
@@ -57,7 +57,7 @@ describe("Execution Integration - Configuration Usage", () => {
       });
 
       expect(params.model).toBe("gpt-3.5-turbo");
-      expect(params.model).not.toBe("gpt-4o");
+      expect(params.model).not.toBe("inception/mercury-2");
     });
 
     it("correctly prioritizes configured value over default", () => {
@@ -105,8 +105,8 @@ describe("Execution Integration - Configuration Usage", () => {
         name: "model",
         type: "string",
         description: "Model choice",
-        defaultValue: "gpt-4o",
-        options: ["gpt-4o", "gpt-3.5-turbo"],
+        defaultValue: "inception/mercury-2",
+        options: ["inception/mercury-2", "gpt-3.5-turbo"],
         enabled: true,
       };
 
@@ -119,7 +119,7 @@ describe("Execution Integration - Configuration Usage", () => {
         params[p.name] = config?.configuredValue ?? p.defaultValue;
       });
 
-      expect(params.model).toBe("gpt-4o");
+      expect(params.model).toBe("inception/mercury-2");
     });
 
     it("uses default for some parameters while using config for others", () => {
@@ -129,8 +129,8 @@ describe("Execution Integration - Configuration Usage", () => {
           name: "model",
           type: "string",
           description: "Model",
-          defaultValue: "gpt-4o",
-          options: ["gpt-4o", "gpt-3.5-turbo"],
+          defaultValue: "inception/mercury-2",
+          options: ["inception/mercury-2", "gpt-3.5-turbo"],
           enabled: true,
         },
         {
@@ -179,7 +179,7 @@ describe("Execution Integration - Configuration Usage", () => {
         name: "model",
         type: "string",
         description: "Model",
-        defaultValue: "gpt-4o",
+        defaultValue: "inception/mercury-2",
         options: null,
         enabled: true,
       };
@@ -205,7 +205,7 @@ describe("Execution Integration - Configuration Usage", () => {
       });
 
       // Should fallback to default when config value is null
-      expect(params.model).toBe("gpt-4o");
+      expect(params.model).toBe("inception/mercury-2");
     });
 
     it("distinguishes between falsy values and undefined", () => {
@@ -275,8 +275,8 @@ describe("Execution Integration - Configuration Usage", () => {
           name: "model",
           type: "string",
           description: "Model",
-          defaultValue: "gpt-4o",
-          options: ["gpt-4o", "gpt-3.5-turbo"],
+          defaultValue: "inception/mercury-2",
+          options: ["inception/mercury-2", "gpt-3.5-turbo"],
           enabled: true,
         },
         {
@@ -351,7 +351,7 @@ describe("Execution Integration - Configuration Usage", () => {
           name: "model",
           type: "string",
           description: "Model",
-          defaultValue: "gpt-4o",
+          defaultValue: "inception/mercury-2",
           options: null,
           enabled: true,
         },
@@ -373,7 +373,7 @@ describe("Execution Integration - Configuration Usage", () => {
         const config = paramConfigs.find((c) => c.paramId === p.id);
         params[p.name] = config?.configuredValue ?? p.defaultValue;
       });
-      expect(params.model).toBe("gpt-4o");
+      expect(params.model).toBe("inception/mercury-2");
       expect(params.temperature).toBe(0.7);
 
       // Simulate second execution: model configured, temp still default

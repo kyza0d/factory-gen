@@ -16,6 +16,7 @@ export default defineConfig({
     include: [
       'src-next/src/**/*.{test,spec}.{ts,tsx}',
       'convex/__tests__/**/*.{test,spec}.ts',
+      'packages/registry/src/**/*.{test,spec}.ts',
     ],
   },
 });

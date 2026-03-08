@@ -8,7 +8,7 @@ const mockCtx: ActionCtx = {
   // Mock any properties of ActionCtx that are used by generateNodeHandler
   // In this case, generateNodeHandler does not use any ctx properties
   // so an empty object is sufficient.
-  environment: { OPENAI_API_KEY: "test-key" }, // Add a mock API key for the test to pass
+  environment: { OPENROUTER_API_KEY: "test-key" }, // Add a mock API key for the test to pass
 } as unknown as ActionCtx;
 
 // Mock the AI SDK
@@ -35,11 +35,12 @@ vi.mock("ai", () => ({
 // Mock the OpenAI provider
 vi.mock("@ai-sdk/openai", () => ({
   openai: vi.fn(),
+  createOpenAI: vi.fn(() => vi.fn()),
 }));
 
 describe("AI Generation Convex Action", () => {
   beforeEach(() => {
-    vi.stubEnv("OPENAI_API_KEY", "test-key");
+    vi.stubEnv("OPENROUTER_API_KEY", "test-key");
   });
 
   afterEach(() => {
@@ -60,13 +61,13 @@ describe("AI Generation Convex Action", () => {
     expect(UINodeSchema.safeParse(result).success).toBe(true);
   });
 
-  it("throws error if OPENAI_API_KEY is missing", async () => {
-    vi.stubEnv("OPENAI_API_KEY", "");
+  it("throws error if OPENROUTER_API_KEY is missing", async () => {
+    vi.stubEnv("OPENROUTER_API_KEY", "");
 
     await expect(
       generateNodeHandler(mockCtx, {
         prompt: "Create a summarizer node",
       })
-    ).rejects.toThrow("OPENAI_API_KEY is not configured");
+    ).rejects.toThrow("OPENROUTER_API_KEY is not configured");
   });
 });

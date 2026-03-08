@@ -1,4 +1,5 @@
 import { NodeMetadata } from "../types";
+import { AI_PROVIDER_CATALOG, DEFAULT_AI_PROVIDER, getAllAIModelIds, getDefaultModelForProvider } from "../ai/models";
 
 export const AIMetadata: NodeMetadata = {
   type: "AI",
@@ -40,11 +41,20 @@ export const AIMetadata: NodeMetadata = {
     },
     {
       id: "ai-param-2",
+      name: "provider",
+      type: "string",
+      description: "The AI provider to use",
+      defaultValue: DEFAULT_AI_PROVIDER,
+      options: AI_PROVIDER_CATALOG.map((provider) => provider.id),
+      enabled: true,
+    },
+    {
+      id: "ai-param-3",
       name: "model",
       type: "string",
       description: "The LLM to use",
-      defaultValue: "gpt-4o",
-      options: ["gpt-4o", "gpt-4-turbo", "gpt-3.5-turbo"],
+      defaultValue: getDefaultModelForProvider(DEFAULT_AI_PROVIDER),
+      options: getAllAIModelIds(),
       enabled: true,
     },
   ],

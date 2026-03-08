@@ -24,8 +24,8 @@ const testNodeWithParams = {
       name: "model",
       type: "string",
       description: "Model choice",
-      defaultValue: "gpt-4o",
-      options: ["gpt-4o", "gpt-3.5-turbo"],
+      defaultValue: "inception/mercury-2",
+      options: ["inception/mercury-2", "gpt-3.5-turbo"],
       enabled: true,
     },
     {
