@@ -581,7 +581,7 @@ function FileChangeConfig({
   );
 }
 
-const HTTP_METHODS = ["GET", "POST"];
+const HTTP_METHODS = ["GET", "POST", "PUT", "PATCH", "DELETE"];
 
 function HttpRequestConfig({
   trigger,
@@ -618,10 +618,22 @@ function HttpRequestConfig({
         <label className="text-xs font-semibold block text-foreground-400">Trigger URL</label>
         <ReadonlyUrlField url={triggerUrl} />
       </div>
+      <div>
+        <label className="text-xs font-semibold block text-foreground-400">Auth Secret</label>
+        <Input
+          type="password"
+          defaultValue={trigger?.httpAuthSecret ?? ""}
+          placeholder="Optional bearer token"
+          onBlur={(e) => onConfigChange({ httpAuthSecret: e.target.value })}
+        />
+        <p className="text-xs text-foreground-400 mt-1 italic">
+          Callers must send this as <span className="font-mono">Authorization: Bearer &lt;secret&gt;</span>
+        </p>
+      </div>
       {method === "GET" && (
         <p className="text-xs text-foreground-400 italic">Query parameters will be passed as payload.</p>
       )}
-      {method === "POST" && (
+      {method !== "GET" && (
         <p className="text-xs text-foreground-400 italic">Request body will be passed as payload.</p>
       )}
     </div>

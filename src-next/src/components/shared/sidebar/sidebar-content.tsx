@@ -7,11 +7,14 @@ import {
   FaBook,
   FaChevronLeft,
   FaMagnifyingGlass,
+  FaCircleQuestion,
+  FaRegCircleQuestion,
 } from 'react-icons/fa6';
 import { Divider, Input, List, Menu, Button } from 'ui-lab-components';
 import { useMutation } from 'convex/react';
 import { api } from "@convex/_generated/api";
 import { HiMiniEllipsisVertical } from 'react-icons/hi2';
+import { SiGitbook } from "react-icons/si";
 
 import { NavItem } from './nav-item';
 import { WorkflowsSection } from './workflows-section';
@@ -149,6 +152,13 @@ export const SidebarContent = React.memo(function SidebarContent() {
             >
               <FaMagnifyingGlass size={13} />
             </button>
+            {!isSearchOpen && (
+              <button
+                className="w-8 h-8 flex items-center justify-center rounded-xs text-foreground-400 hover:bg-background-900 hover:text-foreground-50 focus:outline-none focus:ring-2 focus:ring-accent-500/30"
+              >
+                <SiGitbook size={16} />
+              </button>
+            )}
             {isSearchOpen ? (
               <Input
                 className='rounded-xs py-1.5'

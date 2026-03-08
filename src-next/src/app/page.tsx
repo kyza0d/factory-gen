@@ -1,9 +1,6 @@
 "use client";
 
-import Link from "next/link";
-import { Github, BookOpen } from "lucide-react";
 import Logo from "@/components/shared/logo";
-import { Button } from "ui-lab-components";
 
 export default function Home() {
   const shortcuts = [

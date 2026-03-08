@@ -5,10 +5,9 @@ import { useAction, useMutation } from "convex/react";
 import { Button, Input, useAnimatedWidth } from "ui-lab-components";
 import { FaArrowTurnUp, FaPencil, FaCheck, FaRotateRight } from "react-icons/fa6";
 import { api } from "@convex/_generated/api";
-import { UINode, WorkflowGraph } from "@registry/types";
 
 // Toggle to TEST the UI without calling backend functions
-const TEST = true;
+const TEST = false;
 
 interface PromptInputProps {
   workflowId: string;
@@ -84,8 +83,7 @@ export function PromptInput({ workflowId }: PromptInputProps) {
   const generateNode = useAction(api.workflow_actions.generateNode);
   const createNode = useMutation(api.nodes.createNode);
 
-  const generateWorkflow = useAction(api.workflow_actions.generateWorkflow);
-  const createWorkflow = useMutation(api.nodes.createWorkflow);
+  const initiateWorkflowGeneration = useAction(api.workflow_generation.initiateWorkflowGeneration);
 
   useEffect(() => {
     if (stage === "queued") {
@@ -118,11 +116,11 @@ export function PromptInput({ workflowId }: PromptInputProps) {
         prompt.toLowerCase().includes("sequence") ||
         prompt.toLowerCase().includes("pipeline")
       ) {
-        const workflow: WorkflowGraph = await generateWorkflow({ prompt, workflowId });
-        await createWorkflow({ workflow: { ...workflow, id: workflowId } });
+        // Streaming generation: plan + per-node actions run in background
+        await initiateWorkflowGeneration({ prompt, workflowId });
       } else {
-        const generatedNode = (await generateNode({ prompt, workflowId })) as UINode;
-        await createNode({ ...generatedNode, workflowId });
+        const generatedNode = await generateNode({ prompt, workflowId });
+        await createNode({ ...(generatedNode as any), workflowId });
       }
       setPrompt("");
       setStage("succeeded");

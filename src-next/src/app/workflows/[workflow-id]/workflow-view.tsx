@@ -1,6 +1,8 @@
 "use client";
 
 import { PromptInput } from "../components/prompt-input";
+import { GenerationProgress } from "../components/generation-progress";
+import { DebugPanel } from "../components/debug-panel";
 import { WorkflowCanvas } from "../components/workflow-canvas";
 import { useAction, useQuery } from "convex/react";
 import { useState, useEffect } from "react";
@@ -32,6 +34,7 @@ export function WorkflowView() {
   const [isEditingName, setIsEditingName] = useState(false);
   const [mode, setMode] = useState<string | null>("run");
   const [isWorkflowRunning, setIsWorkflowRunning] = useState(false);
+  const [isDebugOpen, setIsDebugOpen] = useState(false);
 
   useEffect(() => {
     setActiveWorkflowId(workflowId);
@@ -145,8 +148,12 @@ export function WorkflowView() {
                 <FaTerminal size={14} />
               </Button>
             </Tooltip>
-            <Tooltip content="Settings">
-              <Button variant="ghost" className="p-2" isDisabled={isWorkflowRunning}>
+            <Tooltip content="Debug panel">
+              <Button
+                variant="ghost"
+                className={`p-2 ${isDebugOpen ? "text-accent-400 bg-accent-500/10" : ""}`}
+                onPress={() => setIsDebugOpen((v) => !v)}
+              >
                 <FaScrewdriverWrench size={14} />
               </Button>
             </Tooltip>
@@ -178,10 +185,14 @@ export function WorkflowView() {
         </div>
       </div>
 
-      <main className="grid-paper bg-background-950 isolate border border-background-700 rounded-sm flex-1 relative overflow-hidden">
-        <WorkflowCanvas workflowId={workflowId} nodeStatuses={nodeStatuses} nodeResults={nodeResults} />
-      </main>
+      <div className="flex flex-1 min-h-0 gap-2">
+        <main className="grid-paper bg-background-950 isolate border border-background-700 rounded-sm flex-1 relative overflow-hidden">
+          <WorkflowCanvas workflowId={workflowId} nodeStatuses={nodeStatuses} nodeResults={nodeResults} />
+          <GenerationProgress workflowId={workflowId} />
+        </main>
 
+        {isDebugOpen && <DebugPanel workflowId={workflowId} />}
+      </div>
       <div className="absolute bottom-4 inset-x-0 mx-auto w-fit z-20">
         <PromptInput workflowId={workflowId} />
       </div>

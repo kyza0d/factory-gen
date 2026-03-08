@@ -320,9 +320,9 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                     }
                   }}
                 />
-                {node.modules && node.modules.length > 0 && (
+                {node.modules && node.modules.filter((m: any) => m.enabled).length > 0 && (
                   <div className="px-3 pb-3">
-                    {node.modules.map((module: { id: string; type: string; label: string; value: string | null; }) => (
+                    {node.modules.filter((m: any) => m.enabled).map((module: { id: string; type: string; label: string; value: string | null; enabled: boolean; }) => (
                       <div key={module.id} className="mb-2">
                         <Label size="sm" styles="block font-semibold text-foreground-400">
                           {module.label}
@@ -395,10 +395,10 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
                     ))}
                   </div>
                 )}
-                {node.modules && node.modules.length > 0 && (
+                {node.modules && node.modules.filter((m: any) => m.enabled).length > 0 && (
                   <div className="p-3">
                     <p className="text-xs font-semibold mb-1">Modules</p>
-                    {node.modules.map((module: { id: string; type: string; label: string; value: string | null; }) => (
+                    {node.modules.filter((m: any) => m.enabled).map((module: { id: string; type: string; label: string; value: string | null; enabled: boolean; }) => (
                       <div key={module.id} className="mb-2">
                         <Label size="sm" styles="block mt-6 font-semibold">
                           {module.label}
