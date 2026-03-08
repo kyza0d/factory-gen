@@ -69,8 +69,8 @@ importers:
         specifier: ^4.21.0
         version: 4.21.0
       ui-lab-components:
-        specifier: file:../ui-lab/app/packages/@ui
-        version: file:../ui-lab/app/packages/@ui(@shikijs/transformers@3.23.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(shiki@3.23.0)
+        specifier: ^0.2.0
+        version: 0.2.0(@shikijs/transformers@3.23.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(shiki@3.23.0)
       zod:
         specifier: ^4.3.6
         version: 4.3.6
@@ -3653,8 +3653,8 @@ packages:
     engines: {node: '>=14.17'}
     hasBin: true
 
-  ui-lab-components@file:../ui-lab/app/packages/@ui:
-    resolution: {directory: ../ui-lab/app/packages/@ui, type: directory}
+  ui-lab-components@0.2.0:
+    resolution: {integrity: sha512-3YAXQ9XiV8Qpm9Rt1nJZg8TaE3uDETgcDEwyB89rehLvW2sFa7jc9hvwGHbr9ZtkCwkOXzE/FQXisDDn9PuIJg==}
     peerDependencies:
       '@shikijs/transformers': ^3.20.0
       react: ^19.0.0
@@ -7986,7 +7986,7 @@ snapshots:
 
   typescript@5.9.3: {}
 
-  ui-lab-components@file:../ui-lab/app/packages/@ui(@shikijs/transformers@3.23.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(shiki@3.23.0):
+  ui-lab-components@0.2.0(@shikijs/transformers@3.23.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(shiki@3.23.0):
     dependencies:
       '@floating-ui/react-dom': 2.1.8(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
       '@gsap/react': 2.1.2(gsap@3.14.2)(react@19.2.3)
