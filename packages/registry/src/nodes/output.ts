@@ -4,6 +4,7 @@ export const OutputMetadata: NodeMetadata = {
   type: "Output",
   label: "Preview Output",
   description: "Displays the final result of the workflow.",
+  icon: "FaRegEye",
   uiComponent: "Output",
   inputs: [
     {

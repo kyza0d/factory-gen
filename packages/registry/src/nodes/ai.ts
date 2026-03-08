@@ -4,6 +4,7 @@ export const AIMetadata: NodeMetadata = {
   type: "AI",
   label: "AI Processing",
   description: "Processes text using an AI model.",
+  icon: "FaAtom",
   uiComponent: "AI",
   inputs: [
     {

@@ -4,6 +4,7 @@ export const TriggerMetadata: NodeMetadata = {
   type: "Trigger",
   label: "Trigger",
   description: "Automation entry point. Listens for webhooks, scheduled events, file changes, or HTTP requests.",
+  icon: "FaBolt",
   uiComponent: "Trigger",
   inputs: [],
   outputs: [

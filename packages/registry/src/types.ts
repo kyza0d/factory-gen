@@ -54,6 +54,7 @@ export const NodeMetadataSchema = z.object({
   type: z.string().min(1),
   label: z.string().min(1),
   description: z.string().optional(),
+  icon: z.string().optional().describe("Icon identifier key referencing NODE_TYPE_ICONS in the registry."),
   inputs: z.array(IOParamSchema).optional(),
   outputs: z.array(IOParamSchema).optional(),
   parameters: z.array(IOParamSchema).optional(),

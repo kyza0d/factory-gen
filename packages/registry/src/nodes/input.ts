@@ -4,6 +4,7 @@ export const InputMetadata: NodeMetadata = {
   type: "Input",
   label: "User Input",
   description: "Captures input from the user.",
+  icon: "FaRegUser",
   uiComponent: "Input",
   inputs: [],
   outputs: [
