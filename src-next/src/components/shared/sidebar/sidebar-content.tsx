@@ -169,20 +169,20 @@ export const SidebarContent = React.memo(function SidebarContent() {
                 autoFocus
               />
             ) : ( // !isSearchOpen
-              <div className='flex items-center justify-between grow'>
-                {activeItem ?
-                  <span className="text-xs font-medium text-foreground-300">{displayedHeader}</span> : <div className='py-1'></div>
-                }
-                <div className='flex'>
-                  {activeItem && (
-                    <button
-                      onClick={handleBackClick}
-                      className="w-8 h-8 flex items-center justify-center rounded-xs text-foreground-400 hover:bg-background-900 hover:text-foreground-50 focus:outline-none focus:ring-2 focus:ring-accent-500/30"
-                      aria-label="Back"
-                    >
-                      <FaChevronLeft size={11} />
-                    </button>
-                  )}
+              <div className='flex items-center justify-even grow'>
+                {activeItem && (
+                  <button
+                    onClick={handleBackClick}
+                    className="w-8 h-8 aspect-square ml-1 flex items-center justify-center rounded-xs text-foreground-400 hover:bg-background-900 hover:text-foreground-50 focus:outline-none focus:ring-2 focus:ring-accent-500/30"
+                    aria-label="Back"
+                  >
+                    <FaChevronLeft size={11} />
+                  </button>
+                )}
+                <div className='flex w-full items-center justify-evenly'>
+                  {activeItem ?
+                    <span className="text-xs mx-auto font-medium text-foreground-300">{displayedHeader}</span> : <div className='py-1'></div>
+                  }
                   <Menu type="pop-over">
                     <Menu.Trigger
                       className={`w-8 h-8 flex items-center justify-center rounded-xs text-foreground-400 hover:bg-background-900 hover:text-foreground-50 focus:outline-none focus:ring-2 focus:ring-accent-500/30 ${(activeItem === 'nodes' || !activeItem) ? '' : 'invisible'
