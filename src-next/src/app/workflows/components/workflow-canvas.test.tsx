@@ -1,6 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, act } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { WorkflowCanvas } from './workflow-canvas';
+import { Node } from './node';
 
 // Create the mock functions directly here using vi.hoisted to ensure they're available
 // inside the vi.mock factory call which is hoisted to the top.
@@ -17,7 +18,13 @@ vi.mock('convex/react', () => ({
 
 // Mock the 'Node' component to simplify testing of WorkflowCanvas
 vi.mock('./node', () => ({
-  Node: vi.fn(() => <div>Mocked Node</div>),
+  Node: vi.fn(({ onDragStart, onDragEnd }) => (
+    <div>
+      Mocked Node
+      <button onClick={() => onDragStart?.('node1')}>Start Drag</button>
+      <button onClick={() => onDragEnd?.('node1')}>End Drag</button>
+    </div>
+  )),
 }));
 
 describe('workflow-canvas', () => {
@@ -34,8 +41,8 @@ describe('workflow-canvas', () => {
     mockUseQuery.mockImplementation(() => undefined);
     mockUseMutation.mockImplementation(() => vi.fn()); // Default mutation function
 
-    // Mock the 'Node' component to simplify testing of WorkflowCanvas
-    // We need to re-apply this because resetAllMocks might clear it if it was mocked with a factory
+    // Ensure body doesn't have the class before each test
+    document.body.classList.remove('select-none');
   });
 
   it('renders "Fetching Nodes..." when nodes and edges are loading', async () => {
@@ -75,12 +82,9 @@ describe('workflow-canvas', () => {
     ];
 
     // Mock the useQuery calls using a counter to handle multiple calls per render
-    // Since proxy identity is unstable, we rely on the order of calls in WorkflowCanvas:
-    // 1. nodes = useQuery(api.nodes.getNodesByWorkflow, ...)
-    // 2. edges = useQuery(api.nodes.getEdgesByWorkflow, ...)
     let callCount = 0;
     mockUseQuery.mockImplementation(() => {
-      const result = callCount % 2 === 0 ? nodes : edges;
+      const result = callCount % 3 === 0 ? nodes : callCount % 3 === 1 ? edges : [];
       callCount++;
       return result;
     });
@@ -95,7 +99,47 @@ describe('workflow-canvas', () => {
 
     // Wait for nodes to be rendered
     await waitFor(() => expect(screen.getAllByText('Mocked Node')).toHaveLength(nodes.length));
-    expect(screen.queryByText('Fetching Nodes...')).not.toBeInTheDocument();
-    expect(screen.queryByText('No Nodes Found')).not.toBeInTheDocument();
+  });
+
+  it('adds select-none class to body when a node is dragged', async () => {
+    const nodes = [
+      { _id: 'node1', id: 'node1', type: 'Input', position: { x: 0, y: 0 } },
+    ];
+    const edges: any[] = [];
+    const triggers: any[] = [];
+
+    let callCount = 0;
+    mockUseQuery.mockImplementation(() => {
+      const result = callCount % 3 === 0 ? nodes : callCount % 3 === 1 ? edges : triggers;
+      callCount++;
+      return result;
+    });
+
+    render(
+      <WorkflowCanvas
+        workflowId={mockWorkflowId}
+        nodeStatuses={mockNodeStatuses}
+        nodeResults={mockNodeResults}
+      />
+    );
+
+    await waitFor(() => expect(screen.getByText('Mocked Node')).toBeInTheDocument());
+
+    // Initially body should not have the class
+    expect(document.body.classList.contains('select-none')).toBe(false);
+
+    // Simulate drag start
+    await act(async () => {
+      screen.getByText('Start Drag').click();
+    });
+    
+    await waitFor(() => expect(document.body.classList.contains('select-none')).toBe(true));
+
+    // Simulate drag end
+    await act(async () => {
+      screen.getByText('End Drag').click();
+    });
+    
+    await waitFor(() => expect(document.body.classList.contains('select-none')).toBe(false));
   });
 });

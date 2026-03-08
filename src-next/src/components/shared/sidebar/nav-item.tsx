@@ -74,7 +74,7 @@ export const NavItem = React.memo(function NavItem({ item, onSelect, currentActi
       />
 
       {!isCollapsed && (
-        <span className="font-medium whitespace-nowrap overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200">
+        <span className="text-xs font-medium whitespace-nowrap overflow-hidden animate-in fade-in slide-in-from-left-2 duration-200">
           {item.label}
         </span>
       )}
@@ -86,7 +86,7 @@ export const NavItem = React.memo(function NavItem({ item, onSelect, currentActi
       <button
         onClick={() => onSelect(item.id)}
         className={`
-          flex items-center h-10 gap-4 px-3 rounded-sm transition-all duration-200 group relative w-full text-left
+          flex text-xs items-center h-10 gap-4 px-3 rounded-sm transition-all duration-200 group relative w-full text-left
           ${isActive
             ? 'bg-background-900 text-foreground-100'
             : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}
@@ -106,7 +106,7 @@ export const NavItem = React.memo(function NavItem({ item, onSelect, currentActi
       href={item.href || '#'}
       onClick={handleClick}
       className={`
-        flex items-center h-10 gap-4 px-3 rounded-sm transition-all duration-200 group relative
+        flex text-xs items-center h-10 gap-4 px-3 rounded-sm transition-all duration-200 group relative
         ${isActive
           ? 'bg-background-900 text-foreground-100'
           : 'text-foreground-400 hover:text-foreground-50 hover:bg-background-900'}

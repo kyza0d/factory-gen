@@ -87,20 +87,44 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
     setPortPositions(prev => ({ ...prev, ...ports }));
   }, []);
 
-  const [draggingNodes, setDraggingNodes] = React.useState<Record<string, { x: number; y: number }>>({});
+  const [draggingNodeIds, setDraggingNodeIds] = React.useState<Set<string>>(new Set());
+
+  const handleDragStart = React.useCallback((nodeId: string) => {
+    setDraggingNodeIds(prev => new Set(prev).add(nodeId));
+  }, []);
+
+  const handleDragEnd = React.useCallback((nodeId: string) => {
+    setDraggingNodeIds(prev => {
+      const next = new Set(prev);
+      next.delete(nodeId);
+      return next;
+    });
+  }, []);
+
+  const isAnyDragging = draggingNodeIds.size > 0;
+
+  React.useEffect(() => {
+    if (isAnyDragging) {
+      document.body.classList.add("select-none");
+    } else {
+      document.body.classList.remove("select-none");
+    }
+    return () => {
+      document.body.classList.remove("select-none");
+    };
+  }, [isAnyDragging]);
 
   const handleNodeDrag = React.useCallback((
-    nodeId: string,
-    position: { x: number; y: number }
+    _nodeId: string,
+    _position: { x: number; y: number }
   ) => {
-    setDraggingNodes(prev => ({
-      ...prev,
-      [nodeId]: position
-    }));
+    // We no longer track dragging positions in local state to avoid re-rendering the entire canvas.
+    // Node-level state and port reporting handle edge updates.
   }, []);
 
   const handlePortClick = React.useCallback((portId: string, portType: "input" | "output", nodeId: string) => {
     if (portType === "output") {
+      setCursorPos(null);
       dispatch({ type: "START", sourcePortId: portId, sourceNodeId: nodeId });
     } else {
       dispatch({ type: "COMPLETE", targetPortId: portId, targetNodeId: nodeId });
@@ -192,11 +216,6 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
         id: nodeId,
         updates: { position: newPosition },
       });
-      setDraggingNodes(prev => {
-        const newState = { ...prev };
-        delete newState[nodeId];
-        return newState;
-      });
     } catch (error) {
       console.error("Failed to update node position:", error);
     }
@@ -233,7 +252,9 @@ export function WorkflowCanvas({ workflowId, nodeStatuses, nodeResults = {} }: W
             onModuleValueChange={handleModuleValueChange}
             onParameterValueChange={handleParameterValueChange}
             onPositionChange={handlePositionChange}
+            onDragStart={handleDragStart}
             onDrag={handleNodeDrag}
+            onDragEnd={handleDragEnd}
             onPortsChange={handlePortsChange}
             getCanvasRect={getCanvasRect}
             executionStatus={nodeStatuses[node.id] || "idle"}

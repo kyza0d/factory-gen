@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { Input, Select, Button } from "ui-lab-components";
-import { FaCopy, FaCheck } from "react-icons/fa6";
+import { FaCopy, FaCheck, FaLink, FaClock, FaFolder, FaGlobe } from "react-icons/fa6";
 
 const DEPLOYMENT_URL =
   (process.env.NEXT_PUBLIC_CONVEX_URL ?? "").replace(".convex.cloud", ".convex.site") ||
@@ -628,7 +628,12 @@ function HttpRequestConfig({
   );
 }
 
-const TRIGGER_TYPES = ["webhook", "cron", "fileChange", "httpRequest"];
+const TRIGGER_TYPE_CONFIG: Record<string, { label: string; icon: React.ReactNode }> = {
+  webhook: { label: "Webhook", icon: <FaLink className="w-3.5 h-3.5 text-foreground-400" /> },
+  cron: { label: "Cron Schedule", icon: <FaClock className="w-3.5 h-3.5 text-foreground-400" /> },
+  fileChange: { label: "File Change", icon: <FaFolder className="w-3.5 h-3.5 text-foreground-400" /> },
+  httpRequest: { label: "HTTP Request", icon: <FaGlobe className="w-3.5 h-3.5 text-foreground-400" /> },
+};
 
 export function TriggerNodeConfig({
   triggerType,
@@ -643,15 +648,20 @@ export function TriggerNodeConfig({
         <label className="text-xs font-semibold block mb-1">Trigger Type</label>
         <Select
           selectedKey={triggerType}
-          valueLabel={triggerType}
+          valueLabel={TRIGGER_TYPE_CONFIG[triggerType]?.label ?? triggerType}
           onSelectionChange={(key) => onTypeChange(key as string)}
         >
           <Select.Trigger>
-            <Select.Value placeholder="Select trigger type" className="rounded-xl!" />
+            <Select.Value
+              placeholder="Select trigger type"
+              icon={TRIGGER_TYPE_CONFIG[triggerType]?.icon}
+            />
           </Select.Trigger>
           <Select.Content>
-            {TRIGGER_TYPES.map((t) => (
-              <Select.Item key={t} value={t}>{t}</Select.Item>
+            {Object.entries(TRIGGER_TYPE_CONFIG).map(([value, config]) => (
+              <Select.Item key={value} value={value} icon={config.icon} textValue={config.label}>
+                {config.label}
+              </Select.Item>
             ))}
           </Select.Content>
         </Select>

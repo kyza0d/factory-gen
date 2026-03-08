@@ -3,22 +3,27 @@
 import React, { useRef, useEffect, useLayoutEffect, useState, useCallback } from "react";
 import Draggable from "react-draggable";
 import { UINode, IOParam, NodeExecutionStatus } from "@registry/types";
+import { NodeMetadataRegistry } from "@registry/nodes";
 import { Badge, Button, Input, Label, Select } from "ui-lab-components";
-import { FaRegUser, FaAtom, FaRegEye, FaFileLines, FaTrashCan, FaRegImage, FaQuestion, FaBolt, FaGear } from "react-icons/fa6";
+import { FaGear, FaTrashCan } from "react-icons/fa6";
+import { resolveNodeIcon } from "@registry/icons";
 import { DebouncedInput } from "@/components/ui/debounced-input";
 import { TriggerNodeConfig } from "./trigger-node-config";
 import { ConnectionState } from "../canvas-connection";
+import { cn } from "@/lib/cn";
 
 const GRID_SIZE = 25;
 const MIN_WIDTH = 150; // 6 grid cells
-const snapToGrid = (value: number) => Math.ceil(value / GRID_SIZE) * GRID_SIZE;
+const snapToGrid = (value: number) => Math.round(value / GRID_SIZE) * GRID_SIZE;
 
 interface NodeProps {
   node: UINode;
   onModuleValueChange: (nodeId: string, moduleId: string, newValue: unknown) => void;
   onParameterValueChange: (nodeId: string, parameterId: string, newValue: unknown) => void;
   onPositionChange: (nodeId: string, position: { x: number; y: number }) => void;
+  onDragStart?: (nodeId: string) => void;
   onDrag?: (nodeId: string, position: { x: number; y: number }) => void;
+  onDragEnd?: (nodeId: string) => void;
   onPortsChange?: (nodeId: string, ports: Record<string, { x: number; y: number }>) => void;
   getCanvasRect?: () => DOMRect | null;
   executionStatus?: NodeExecutionStatus;
@@ -34,17 +39,6 @@ interface NodeProps {
   onDetach?: (nodeId: string) => void;
 }
 
-const nodeTypeIcons: Record<string, React.ElementType> = {
-  Input: FaRegUser,
-  AI: FaAtom,
-  Output: FaRegEye,
-  TextSummarizer: FaFileLines,
-  ImageGenerator: FaRegImage,
-  InvalidNode: FaTrashCan,
-  Trigger: FaBolt,
-  // Default icon for unknown node types
-  default: FaQuestion,
-};
 
 interface PortProps {
   port: IOParam;
@@ -53,62 +47,89 @@ interface PortProps {
   disabled?: boolean;
 }
 
-const Port: React.FC<PortProps> = ({ port, type, onPortClick, disabled }) => (
-  <div
-    className={`${type === "input" ? "justify-start pl-4" : "justify-end pr-4"}`}
-  >
-    {type === "input" && (
+const Port: React.FC<PortProps> = ({ port, type, onPortClick, disabled }) => {
+  const isInput = type === "input";
+  return (
+    <div className={isInput ? "justify-start pl-4" : "justify-end pr-4"}>
+      {/* Transparent hitbox — larger touch/click target centered on the port */}
       <div
-        data-port-id={port.id}
-        data-port-type={type}
         onClick={disabled ? undefined : (e) => { e.stopPropagation(); onPortClick?.(port.id, type); }}
-        className={`absolute left-[-4px] mt-1 -translate-y-1/2 top-1/2 w-2 h-2 border border-background-600 bg-background-800${disabled ? "" : " cursor-crosshair hover:bg-accent-500"}`}
-        aria-label={`Input port ${port.name}`}
-      />
-    )}
-    {type === "output" && (
-      <div
-        data-port-id={port.id}
-        data-port-type={type}
-        onClick={disabled ? undefined : (e) => { e.stopPropagation(); onPortClick?.(port.id, type); }}
-        className={`absolute right-[-4px] mt-1 -translate-y-1/2 top-1/2 w-2 h-2 border border-background-600 bg-background-800${disabled ? "" : " cursor-crosshair hover:bg-accent-500"}`}
-        aria-label={`Output port ${port.name}`}
-      />
-    )}
-  </div>
-);
+        className={cn(
+          "absolute top-1/2 -translate-y-1/2 flex items-center justify-center w-6 h-8",
+          isInput ? "left-[-12px]" : "right-[-12px]",
+          !disabled && "cursor-crosshair group/port",
+        )}
+        aria-label={`${isInput ? "Input" : "Output"} port ${port.name}`}
+      >
+        {/* Visual dot — position tracked for wire connections */}
+        <div
+          data-port-id={port.id}
+          data-port-type={type}
+          className={cn(
+            "w-2 h-2 border border-background-600 bg-background-800",
+            !disabled && "group-hover/port:bg-accent-500",
+          )}
+        />
+      </div>
+    </div>
+  );
+};
 
-export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange, onParameterValueChange, onPositionChange, onDrag, onPortsChange, getCanvasRect, executionStatus, result, trigger, onTriggerUpdate, onPortClick, connectionState, onOpenConfig, isSelected, onSelect, onDelete, onDetach }) => {
+export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange, onParameterValueChange, onPositionChange, onDragStart, onDrag, onDragEnd, onPortsChange, getCanvasRect, executionStatus, result, trigger, onTriggerUpdate, onPortClick, connectionState, onOpenConfig, isSelected, onSelect, onDelete, onDetach }) => {
   const nodeRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
-  const IconComponent = nodeTypeIcons[node.type] || nodeTypeIcons.default;
+  const IconComponent = resolveNodeIcon(NodeMetadataRegistry[node.type]?.icon);
 
   const defaultWidth = node.type === "Output" ? 300 : 250;
   const [localWidth, setLocalWidth] = useState(() => snapToGrid(defaultWidth));
   const [localPosition, setLocalPosition] = useState(() => ({
-    x: node.position?.x ?? 50,
-    y: node.position?.y ?? 50,
+    x: snapToGrid(node.position?.x ?? 50),
+    y: snapToGrid(node.position?.y ?? 50),
   }));
   const [minHeight, setMinHeight] = useState<number | undefined>(undefined);
   const [localHeight, setLocalHeight] = useState<number | undefined>(undefined);
+  const [isDragging, setIsDragging] = useState(false);
 
-  const measureAndReportPorts = useCallback(() => {
-    if (!nodeRef.current || !onPortsChange || !getCanvasRect) return;
-    const canvasRect = getCanvasRect();
-    if (!canvasRect) return;
+  const portOffsets = useRef<Record<string, { x: number; y: number }>>({});
+
+  const measurePortOffsets = useCallback(() => {
+    if (!nodeRef.current) return;
+    const nodeRect = nodeRef.current.getBoundingClientRect();
     const portEls = nodeRef.current.querySelectorAll<HTMLElement>("[data-port-id]");
-    const positions: Record<string, { x: number; y: number }> = {};
+    const offsets: Record<string, { x: number; y: number }> = {};
     portEls.forEach((el) => {
       const portId = el.dataset.portId;
       if (!portId) return;
       const rect = el.getBoundingClientRect();
+      offsets[portId] = {
+        x: rect.left + rect.width / 2 - nodeRect.left,
+        y: rect.top + rect.height / 2 - nodeRect.top,
+      };
+    });
+    portOffsets.current = offsets;
+  }, []);
+
+  const reportPorts = useCallback((position: { x: number; y: number }) => {
+    if (!onPortsChange) return;
+    const positions: Record<string, { x: number; y: number }> = {};
+    Object.entries(portOffsets.current).forEach(([portId, offset]) => {
       positions[portId] = {
-        x: rect.left + rect.width / 2 - canvasRect.left,
-        y: rect.top + rect.height / 2 - canvasRect.top,
+        x: position.x + offset.x,
+        y: position.y + offset.y,
       };
     });
     onPortsChange(node.id, positions);
-  }, [node.id, onPortsChange, getCanvasRect]);
+  }, [node.id, onPortsChange]);
+
+  // Measure offsets whenever size or structure might change
+  useLayoutEffect(() => {
+    measurePortOffsets();
+  }, [localWidth, minHeight, measurePortOffsets, node.inputs, node.outputs]);
+
+  // Report absolute positions whenever node moves or offsets change
+  useLayoutEffect(() => {
+    reportPorts(localPosition);
+  }, [localPosition, reportPorts]);
 
   // Auto-snap height to grid: measure inner content height, apply snapped minHeight to outer
   useEffect(() => {
@@ -130,10 +151,6 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
       default: return "border-background-600";
     }
   };
-
-  useLayoutEffect(() => {
-    measureAndReportPorts();
-  }, [localPosition, localWidth, minHeight, measureAndReportPorts]);
 
   useEffect(() => {
     if (node.type === "Output" && result !== undefined) {
@@ -196,16 +213,23 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
   return (
     <Draggable
       nodeRef={nodeRef as React.RefObject<HTMLElement>}
-      position={localPosition}
+      defaultPosition={localPosition}
       grid={[GRID_SIZE, GRID_SIZE]}
+      onStart={() => {
+        setIsDragging(true);
+        onDragStart?.(node.id);
+      }}
       onDrag={(_, data) => {
         const pos = { x: data.x, y: data.y };
-        setLocalPosition(pos);
+        reportPorts(pos);
         onDrag?.(node.id, pos);
       }}
       onStop={(_, data) => {
+        setIsDragging(false);
+        onDragEnd?.(node.id);
         const pos = { x: data.x, y: data.y };
         setLocalPosition(pos);
+        reportPorts(pos);
         onPositionChange(node.id, pos);
       }}
       handle=".drag-handle"
@@ -234,17 +258,17 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
 
         {/* Inner content div — measured for height snapping */}
         <div ref={contentRef}>
-          <div className="relative">
+          <div className={cn("relative cursor-grab", isDragging && "cursor-grabbing")}>
             {isSelected && (
-              <div className="absolute -top-12 left-0 flex items-center gap-1 bg-background-700 border border-background-600 rounded-sm px-1 py-0.5 z-10" onClick={(e) => e.stopPropagation()}>
-                <Button variant="ghost" className="p-2" size="sm" onPress={handleGearClick} aria-label="Configure node" icon={{ left: <FaGear size={11} /> }} />
-                <Button variant="ghost" className="p-2" size="sm" onPress={() => onDelete?.(node.id)} aria-label="Delete node" icon={{ left: <FaTrashCan size={11} /> }} />
+              <div className="absolute -top-12 left-0 flex items-center gap-1 bg-background-800 border border-background-700 rounded-xs px-1 py-0.5 z-10" onClick={(e) => e.stopPropagation()}>
+                <Button variant="ghost" className="p-2 hover:bg-background-600 text-foreground-400" size="sm" onPress={handleGearClick} aria-label="Configure node" icon={{ left: <FaGear size={11} /> }} />
+                <Button variant="ghost" className="p-2 hover:bg-background-600 text-foreground-400" size="sm" onPress={() => onDelete?.(node.id)} aria-label="Delete node" icon={{ left: <FaTrashCan size={11} /> }} />
               </div>
             )}
-            <div className="flex bg-background-700 p-2 rounded-t-sm border-b border-background-600 items-center justify-between drag-handle">
+            <div className={`flex ${isDragging ? "bg-background-600" : "bg-background-700"} p-2 rounded-t-sm border-b border-background-600 items-center justify-between drag-handle`}>
               <div className="flex items-center gap-2">
-                <Badge icon={<IconComponent className="text-foreground-400" />} size="sm" className="bg-background-600">
-                  {node.label}
+                <Badge icon={<IconComponent className="text-foreground-400" />} size="sm" className="gap-3 border-none bg-transparent">
+                  <span className="text-xs font-body-normal">{node.label}</span>
                 </Badge>
               </div>
             </div>
@@ -395,7 +419,7 @@ export const Node: React.FC<NodeProps> = React.memo(({ node, onModuleValueChange
           </div>
         </div>
       </div>
-    </Draggable>
+    </Draggable >
   );
 });
 

@@ -2,7 +2,7 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { FaRoute, FaPlus } from 'react-icons/fa6';
-import { Expand, Button, Select, Menu, Scroll, Input } from 'ui-lab-components';
+import { Expand, Button, Select, Menu, Scroll, Input, Switch } from 'ui-lab-components';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from "@convex/_generated/api"
 import { useApp } from '../app-context';
@@ -34,10 +34,7 @@ export const WorkflowsSection = React.memo(function WorkflowsSection() {
 
   const handleCreateWorkflow = useCallback(async () => {
     try {
-      const id = await createEmptyWorkflow({
-        name: "Untitled Workflow",
-        workspaceId: activeWorkspaceId ?? undefined,
-      });
+      const id = await createEmptyWorkflow({ name: "Untitled Workflow", workspaceId: activeWorkspaceId ?? undefined });
       navigateToWorkflow(id);
     } catch (error) {
       console.error("Failed to create workflow:", error);
@@ -46,11 +43,7 @@ export const WorkflowsSection = React.memo(function WorkflowsSection() {
 
   return (
     <div className="w-full flex items-center mb-2">
-      <Expand
-        className='flex-grow'
-        isExpanded={isExpanded && !isCollapsed}
-        onExpandedChange={setIsManualExpanded}
-      >
+      <Expand className='grow' isExpanded={isExpanded && !isCollapsed} onExpandedChange={setIsManualExpanded}>
         <div className='w-full relative'>
           <Link
             href="/workflows"
@@ -76,13 +69,13 @@ export const WorkflowsSection = React.memo(function WorkflowsSection() {
                 variant='ghost'
                 title="Create new workflow"
                 onClick={handleCreateWorkflow}
-                className="w-7 h-7 p-0 mr-1 rounded-sm text-foreground-400 hover:text-foreground-50 hover:bg-background-700"
+                className="w-7 h-7 p-1 mr-1 rounded-sm text-foreground-400 hover:text-foreground-50 hover:bg-background-700"
               >
                 <FaPlus size={13} />
               </Button>
               <Expand.Icon
                 onClick={toggleExpand}
-                className='w-7 h-7 p-0  hover:text-foreground-50 hover:bg-background-700'
+                className='w-7 h-7 p-1  hover:text-foreground-50 hover:bg-background-700'
               />
             </div>
           )}
@@ -97,13 +90,14 @@ export const WorkflowsSection = React.memo(function WorkflowsSection() {
   );
 });
 
-const WorkflowNavItem = React.memo(function WorkflowNavItem({ id, name }: { id: string; name: string; }) {
+const WorkflowNavItem = React.memo(function WorkflowNavItem({ id, name, isGlobal }: { id: string; name: string; isGlobal?: boolean }) {
   const { activeWorkflowId } = useApp();
   const { navigateToWorkflow, navigateToWorkflows } = useAppNavigation();
   const isActive = activeWorkflowId === id;
 
   const renameWorkflowMutation = useMutation(api.nodes.renameWorkflow);
   const deleteWorkflowMutation = useMutation(api.nodes.deleteWorkflow);
+  const toggleGlobalMutation = useMutation(api.nodes.toggleGlobalWorkflow);
 
   const [isRenaming, setIsRenaming] = useState(false);
   const [renameValue, setRenameValue] = useState(name);
@@ -150,6 +144,15 @@ const WorkflowNavItem = React.memo(function WorkflowNavItem({ id, name }: { id: 
     }
   }, [id, isActive, deleteWorkflowMutation, navigateToWorkflows]);
 
+  const handleToggleGlobal = useCallback(async (value?: boolean | React.MouseEvent | React.KeyboardEvent) => {
+    const nextValue = typeof value === 'boolean' ? value : !isGlobal;
+    try {
+      await toggleGlobalMutation({ id, isGlobal: nextValue });
+    } catch (error) {
+      console.error("Failed to toggle global status:", error);
+    }
+  }, [id, isGlobal, toggleGlobalMutation]);
+
   return (
     <div className='relative group cursor-pointer'>
       {isRenaming ? (
@@ -182,6 +185,15 @@ ${isActive
             <HiMiniEllipsisVertical />
           </Menu.Trigger>
           <Menu.Content offset={4} side="right">
+            <Menu.Item onSelect={handleToggleGlobal}>
+              Global
+              <Switch 
+                className='ml-auto' 
+                size="sm" 
+                isSelected={isGlobal} 
+                onChange={handleToggleGlobal}
+              />
+            </Menu.Item>
             <Menu.Item onSelect={handleRenameStart}>Rename</Menu.Item>
             <Menu.Item onSelect={handleDelete}>Delete</Menu.Item>
           </Menu.Content>
@@ -198,21 +210,30 @@ const WorkflowsList = React.memo(function WorkflowsList() {
     activeWorkspaceId !== null ? { workspaceId: activeWorkspaceId } : "skip",
   );
 
-  if (workflows === undefined) {
+  const sortedWorkflows = useMemo(() => {
+    if (!workflows) return undefined;
+    return [...workflows].sort((a, b) => {
+      if (a.isGlobal === b.isGlobal) return 0;
+      return a.isGlobal ? -1 : 1;
+    });
+  }, [workflows]);
+
+  if (sortedWorkflows === undefined) {
     return <div className="p-2 text-xs text-foreground-500">Loading...</div>;
   }
 
-  if (workflows.length === 0) {
+  if (sortedWorkflows.length === 0) {
     return <div className="p-2 text-xs text-foreground-500 italic">No workflows</div>;
   }
 
   return (
     <>
-      {workflows.map((workflow: { id: string; name: string }) => (
+      {sortedWorkflows.map((workflow: { id: string; name: string; isGlobal?: boolean }) => (
         <WorkflowNavItem
           key={workflow.id}
           id={workflow.id}
           name={workflow.name}
+          isGlobal={workflow.isGlobal}
         />
       ))}
     </>

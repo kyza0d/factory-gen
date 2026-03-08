@@ -1,7 +1,7 @@
 "use client"
 import React, { useCallback } from 'react';
 import { useQuery, useMutation } from 'convex/react';
-import { FaPlus, FaTrash } from 'react-icons/fa6';
+import { FaPlus, FaTrash, FaMagnifyingGlass } from 'react-icons/fa6';
 import { Select, Button } from 'ui-lab-components';
 import { api } from "@convex/_generated/api";
 import { useApp } from '../app-context';
@@ -14,7 +14,12 @@ type Workspace = {
   description?: string;
 };
 
-export const WorkspaceSwitcher = React.memo(function WorkspaceSwitcher() {
+type WorkspaceSwitcherProps = {
+  isSearchOpen: boolean;
+  toggleSearch: () => void;
+}
+
+export const WorkspaceSwitcher = React.memo(function WorkspaceSwitcher({ isSearchOpen, toggleSearch }: WorkspaceSwitcherProps) {
   const { activeWorkspaceId, setActiveWorkspaceId } = useApp();
   const workspaces = useQuery((api as any).workspaces.getWorkspaces);
   const createWorkspace = useMutation((api as any).workspaces.createWorkspace);
@@ -41,7 +46,7 @@ export const WorkspaceSwitcher = React.memo(function WorkspaceSwitcher() {
 
   return (
     <div className="w-full flex-col">
-      <div className="px-2 flex items-center space-x-3">
+      <div className="flex items-center space-x-2">
         <Select
           selectedKey={activeWorkspaceId}
           onSelectionChange={(key) => setActiveWorkspaceId(key as string)}
@@ -74,14 +79,13 @@ export const WorkspaceSwitcher = React.memo(function WorkspaceSwitcher() {
             ))}
           </Select.Content>
         </Select>
-        <Button
-          variant="ghost"
+        <button
           title="New workspace"
-          onPress={handleCreate}
-          className="w-7 h-7 p-0 rounded-sm text-foreground-400 hover:text-foreground-50 hover:bg-background-700"
+          onClick={handleCreate}
+          className="w-8 h-8 aspect-square flex items-center justify-center rounded-xs text-foreground-400 hover:bg-background-900 hover:text-foreground-50 focus:outline-none focus:ring-2 focus:ring-accent-500/30"
         >
           <FaPlus size={12} />
-        </Button>
+        </button>
       </div>
     </div>
   );

@@ -76,7 +76,7 @@ describe("NodeConfigModal", () => {
 
     // The label is one element, the description is another. Target the label specifically.
     expect(screen.getByText(/model/i, { selector: 'label' })).toBeInTheDocument();
-    expect(screen.getByLabelText(/prompt/i)).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: /prompt/i })).toBeInTheDocument();
   });
 
   it("pre-fills each field with the parameter's current defaultValue", () => {
@@ -84,7 +84,7 @@ describe("NodeConfigModal", () => {
       <NodeConfigModal node={makeNode()} onSave={vi.fn()} onClose={vi.fn()} />
     );
 
-    const promptField = screen.getByLabelText(/prompt/i) as HTMLInputElement;
+    const promptField = screen.getByRole("textbox", { name: /prompt/i }) as HTMLInputElement;
     expect(promptField.value).toBe("Summarize: {{input}}");
   });
 
@@ -94,7 +94,7 @@ describe("NodeConfigModal", () => {
       <NodeConfigModal node={makeNode()} onSave={onSave} onClose={vi.fn()} />
     );
 
-    const promptField = screen.getByLabelText(/prompt/i);
+    const promptField = screen.getByRole("textbox", { name: /prompt/i });
     fireEvent.change(promptField, { target: { value: "New prompt" } });
 
     fireEvent.click(screen.getByRole("button", { name: /save/i }));

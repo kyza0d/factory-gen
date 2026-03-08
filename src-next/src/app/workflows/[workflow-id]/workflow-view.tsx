@@ -89,7 +89,7 @@ export function WorkflowView() {
         <div className="flex items-center gap-2">
           <button
             onClick={toggleSidebar}
-            className="p-2.5 rounded-sm text-foreground-400 hover:bg-background-900/50 hover:text-foreground-50 focus:outline-none focus:ring-2 focus:ring-accent-500/30 transition-colors"
+            className="w-8 h-8 flex items-center justify-center rounded-xs text-foreground-400 hover:bg-background-900 hover:text-foreground-50 focus:outline-none focus:ring-2 focus:ring-accent-500/30"
             aria-label={isCollapsed ? "Expand sidebar" : "Collapse sidebar"}
           >
             <PanelLeft size={19} />
