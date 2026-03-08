@@ -15,7 +15,7 @@ export const IOParamSchema = z.object({
   description: z.string().describe("Brief explanation of the I/O or parameter."),
   defaultValue: z.union([z.string(), z.number(), z.boolean()]).nullable().describe("Optional default value for parameters (as string, number, boolean, or null)."),
   options: z.array(z.string()).nullable().describe("Optional list of choices for dropdowns/enums (or null)."),
-  enabled: z.boolean().optional().describe("Whether the parameter is currently enabled for this node instance."),
+  enabled: z.boolean().describe("Whether the parameter is currently enabled for this node instance."),
 });
 
 export const NodeExecutionStatusSchema = z.enum(["idle", "pending", "success", "warning", "danger"]);

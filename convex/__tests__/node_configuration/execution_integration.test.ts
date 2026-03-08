@@ -33,6 +33,7 @@ describe("Execution Integration - Configuration Usage", () => {
         description: "Model choice",
         defaultValue: "gpt-4o",
         options: ["gpt-4o", "gpt-3.5-turbo"],
+        enabled: true,
       };
 
       const paramConfig = {
@@ -67,6 +68,7 @@ describe("Execution Integration - Configuration Usage", () => {
         description: "Temperature",
         defaultValue: 0.7,
         options: null,
+        enabled: true,
       };
 
       const configuredValue = 0.1; // Different from default
@@ -105,6 +107,7 @@ describe("Execution Integration - Configuration Usage", () => {
         description: "Model choice",
         defaultValue: "gpt-4o",
         options: ["gpt-4o", "gpt-3.5-turbo"],
+        enabled: true,
       };
 
       // Simulate the execution logic with no configs
@@ -128,6 +131,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Model",
           defaultValue: "gpt-4o",
           options: ["gpt-4o", "gpt-3.5-turbo"],
+          enabled: true,
         },
         {
           id: "param-prompt",
@@ -136,6 +140,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "System prompt",
           defaultValue: "You are helpful.",
           options: null,
+          enabled: true,
         },
       ];
 
@@ -176,6 +181,7 @@ describe("Execution Integration - Configuration Usage", () => {
         description: "Model",
         defaultValue: "gpt-4o",
         options: null,
+        enabled: true,
       };
 
       // Configuration with null value means "use default"
@@ -211,6 +217,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Enable flag",
           defaultValue: true,
           options: null,
+          enabled: true,
         },
         {
           id: "param-retries",
@@ -219,6 +226,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Retry count",
           defaultValue: 3,
           options: null,
+          enabled: true,
         },
       ];
 
@@ -269,6 +277,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Model",
           defaultValue: "gpt-4o",
           options: ["gpt-4o", "gpt-3.5-turbo"],
+          enabled: true,
         },
         {
           id: "param-temp",
@@ -277,6 +286,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Temp",
           defaultValue: 0.7,
           options: null,
+          enabled: true,
         },
         {
           id: "param-prompt",
@@ -285,6 +295,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Prompt",
           defaultValue: "Default prompt",
           options: null,
+          enabled: true,
         },
       ];
 
@@ -342,6 +353,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Model",
           defaultValue: "gpt-4o",
           options: null,
+          enabled: true,
         },
         {
           id: "param-temp",
@@ -350,6 +362,7 @@ describe("Execution Integration - Configuration Usage", () => {
           description: "Temp",
           defaultValue: 0.7,
           options: null,
+          enabled: true,
         },
       ];
 

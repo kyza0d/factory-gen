@@ -14,6 +14,7 @@ export const AIMetadata: NodeMetadata = {
       description: "The source text to process",
       defaultValue: null,
       options: null,
+      enabled: true,
     },
   ],
   outputs: [
@@ -24,6 +25,7 @@ export const AIMetadata: NodeMetadata = {
       description: "The result of the AI processing",
       defaultValue: null,
       options: null,
+      enabled: true,
     },
   ],
   parameters: [

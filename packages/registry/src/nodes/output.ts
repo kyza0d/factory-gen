@@ -14,6 +14,7 @@ export const OutputMetadata: NodeMetadata = {
       description: "The content to display",
       defaultValue: null,
       options: null,
+      enabled: true,
     },
   ],
   outputs: [],

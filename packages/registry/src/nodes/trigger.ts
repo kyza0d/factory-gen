@@ -15,6 +15,7 @@ export const TriggerMetadata: NodeMetadata = {
       description: "Event payload from the trigger source",
       defaultValue: null,
       options: null,
+      enabled: true,
     },
     {
       id: "trigger-timestamp",
@@ -23,6 +24,7 @@ export const TriggerMetadata: NodeMetadata = {
       description: "ISO 8601 timestamp when trigger fired",
       defaultValue: null,
       options: null,
+      enabled: true,
     },
   ],
   parameters: [
@@ -50,13 +52,13 @@ export const TriggerMetadata: NodeMetadata = {
       type: "badge",
       label: "Status",
       value: "listening",
-      enabled: true,
+      enabled: false,
     },
     {
       type: "text",
       label: "Last Event",
       value: null,
-      enabled: true,
+      enabled: false,
     },
   ],
 };

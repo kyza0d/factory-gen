@@ -15,6 +15,7 @@ export const InputMetadata: NodeMetadata = {
       description: "The user input text",
       defaultValue: null,
       options: null,
+      enabled: true,
     },
   ],
   parameters: [],
